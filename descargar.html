@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Preparando Descarga</title>
+  <style>
+    body { 
+      background: #000000; 
+      color: #ffffff; 
+      font-family: sans-serif; 
+      text-align: center; 
+      padding: 50px 20px; 
+    }
+    .caja-descarga { 
+      max-width: 500px; 
+      margin: 0 auto; 
+      background: #0a0a0a; 
+      border: 1px solid #330000; 
+      padding: 30px; 
+      border-radius: 12px; 
+    }
+    h1 { font-size: 1.8rem; margin-bottom: 10px; color: #ff3333; }
+    p { color: #aaaaaa; margin-bottom: 25px; }
+    
+    /* Estilo del botón de descarga */
+    .btn-obtener { 
+      display: inline-block; 
+      background: #ff0000; 
+      color: #fff; 
+      padding: 12px 30px; 
+      text-decoration: none; 
+      font-weight: bold; 
+      border-radius: 50px; 
+      font-size: 1.2rem; 
+      box-shadow: 0 0 10px rgba(255,0,0,0.5); 
+    }
+    .btn-obtener:hover { 
+      background: #cc0000; 
+      box-shadow: 0 0 15px #ff0000; 
+    }
+    
+    /* Estilo del texto del contador */
+    .contador-texto { 
+      font-size: 1.3rem; 
+      color: #ffcc00; 
+      font-weight: bold; 
+    }
+  </style>
+</head>
+<body>
+
+  <div class="caja-descarga">
+    <p>Estás descargando:</p>
+    <h1 id="nombre-archivo">Detectando archivo...</h1>
+    
+    <div id="contenedor-dinamico">
+      <span class="contador-texto">Preparando enlace seguro...</span>
+    </div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const identificador = params.get('id');
+    const categoria = params.get('cat') || 'programas';
+    
+    if (identificador) {
+      document.getElementById('nombre-archivo').innerText = identificador;
+    }
+
+
+    const FUENTES_PASTEE = {
+      'programas': 'https://pastee.dev/r/PVDUNiui/0',
+      'juegos':    '',
+      'windows':   '',
+      'packs':     ''
+    };
+
+    const urlDestino = FUENTES_PASTEE[categoria] || FUENTES_PASTEE['programas'];
+    let enlaceReal = null;
+
+
+    fetch(urlDestino)
+      .then(res => res.json())
+      .then(datos => {
+        enlaceReal = datos[identificador];
+      })
+      .catch(err => {
+        console.error("Error al precargar el enlace");
+      });
+
+    let segundosRestantes = 5;
+    const contenedor = document.getElementById('contenedor-dinamico');
+
+    const cuentaRegresiva = setInterval(() => {
+      segundosRestantes--;
+
+      if (segundosRestantes > 0) {
+        contenedor.innerHTML = '<span class="contador-texto">Tu enlace estará listo en ' + segundosRestantes + ' segundos...</span>';
+      } else {
+
+        clearInterval(cuentaRegresiva);
+        
+        if (enlaceReal) {
+          contenedor.innerHTML = '<a href="' + enlaceReal + '" class="btn-obtener" rel="nofollow noopener noreferrer">IR A LA DESCARGA</a>';
+        } else {
+          contenedor.innerHTML = '<span style="color:red; font-weight:bold;">Error: El enlace no se pudo cargar o no existe.</span>';
+        }
+      }
+    }, 1000); 
+  </script>
+
+</body>
+</html>

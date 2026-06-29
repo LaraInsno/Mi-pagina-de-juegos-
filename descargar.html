@@ -61,35 +61,63 @@
   <script>
     const params = new URLSearchParams(window.location.search);
     const identificador = params.get('id');
-    const categoria = params.get('cat') || 'programas';
     
     if (identificador) {
       document.getElementById('nombre-archivo').innerText = identificador;
     }
 
-
-    const FUENTES_PASTEE = {
-      'programas': 'https://pastee.dev/r/PVDUNiui/0',
-      'juegos':    '',
-      'windows':   '',
-      'packs':     ''
-    };
-
-    const urlDestino = FUENTES_PASTEE[categoria] || FUENTES_PASTEE['programas'];
     let enlaceReal = null;
+    let contadorTerminado = false;
+    let errorCarga = false;
 
+ 
+    const URL_EXTERNA = 'https://api.npoint.io/35ebd44c01a7e455bcf4';
 
-    fetch(urlDestino)
-      .then(res => res.json())
+    const contenedor = document.getElementById('contenedor-dinamico');
+
+  
+    function actualizarContenedor() {
+      if (contadorTerminado) {
+        if (enlaceReal) {
+     
+          contenedor.innerHTML = '<a href="' + enlaceReal + '" class="btn-obtener" rel="nofollow noopener noreferrer" target="_blank">IR A LA DESCARGA</a>';
+        } else if (errorCarga) {
+        
+          contenedor.innerHTML = '<span style="color:#ff3333; font-weight:bold;">Error: El enlace no se pudo cargar o no existe.</span>';
+        } else {
+         
+          contenedor.innerHTML = '<span class="contador-texto">Generando enlace seguro... por favor espera</span>';
+        }
+      }
+    }
+
+  
+    fetch(URL_EXTERNA)
+      .then(res => {
+        if (!res.ok) throw new Error("Error al conectar con el servidor de enlaces");
+        return res.json();
+      })
       .then(datos => {
-        enlaceReal = datos[identificador];
+        let enlaceObtenido = datos[identificador];
+        
+        if (enlaceObtenido) {
+         
+            enlaceReal = atob(enlaceObtenido);
+           
+            actualizarContenedor(); 
+        } else {
+            errorCarga = true;
+            actualizarContenedor();
+        }
       })
       .catch(err => {
-        console.error("Error al precargar el enlace");
+        console.error("Error al obtener los enlaces:", err);
+        errorCarga = true;
+        actualizarContenedor();
       });
 
+   
     let segundosRestantes = 5;
-    const contenedor = document.getElementById('contenedor-dinamico');
 
     const cuentaRegresiva = setInterval(() => {
       segundosRestantes--;
@@ -97,14 +125,10 @@
       if (segundosRestantes > 0) {
         contenedor.innerHTML = '<span class="contador-texto">Tu enlace estará listo en ' + segundosRestantes + ' segundos...</span>';
       } else {
-
         clearInterval(cuentaRegresiva);
+        contadorTerminado = true;
         
-        if (enlaceReal) {
-          contenedor.innerHTML = '<a href="' + enlaceReal + '" class="btn-obtener" rel="nofollow noopener noreferrer">IR A LA DESCARGA</a>';
-        } else {
-          contenedor.innerHTML = '<span style="color:red; font-weight:bold;">Error: El enlace no se pudo cargar o no existe.</span>';
-        }
+        actualizarContenedor(); 
       }
     }, 1000); 
   </script>

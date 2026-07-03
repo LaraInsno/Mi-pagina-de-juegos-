@@ -71,7 +71,7 @@
     let errorCarga = false;
 
  
-    const URL_EXTERNA = 'https://api.npoint.io/99b0701d10a724563dac';
+    const URL_EXTERNA = 'https://api.npoint.io/760361677fa9e26637a5';
 
     const contenedor = document.getElementById('contenedor-dinamico');
 
@@ -117,20 +117,19 @@
       });
 
    
-    let segundosRestantes = 5;
+   let segundosRestantes = 5;
 
-    const cuentaRegresiva = setInterval(() => {
-      segundosRestantes--;
+   const cuentaRegresiva = setInterval(() => {
+    segundosRestantes--;
 
-      if (segundosRestantes > 0) {
-        contenedor.innerHTML = '<span class="contador-texto">Tu enlace estará listo en ' + segundosRestantes + ' segundos...</span>';
-      } else {
-        clearInterval(cuentaRegresiva);
-        contadorTerminado = true;
-        
-        actualizarContenedor(); 
-      }
-    }, 1000); 
+    if (segundosRestantes > 0) {
+       contenedor.innerHTML = '<span class="contador-texto">Tu enlace estará listo en ' + segundosRestantes + ' segundos...</span>';
+     } else {
+      clearInterval(cuentaRegresiva);
+      contadorTerminado = true;
+       actualizarContenedor(); 
+    }
+  }, 1000);
   </script>
 
 </body>

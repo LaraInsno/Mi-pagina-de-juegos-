@@ -1,29 +1,14 @@
-function irAlEnlace(identificador) {
-  let categoria = 'programas'; 
+function irAlEnlace(identificador, imagen) {
+  let url = 'descargar.html?id=' + encodeURIComponent(identificador);
   
-  const enlaceClickeado = document.querySelector(`a[onclick*="${identificador}"]`);
   
-  if (enlaceClickeado) {
-
-    const tarjeta = enlaceClickeado.closest('.card');
-    
-    if (tarjeta) {
-
-      const contenedorPadre = tarjeta.parentElement ? tarjeta.parentElement.id : '';
-      
-      if (contenedorPadre === 'juegos-grid') {
-        categoria = 'juegos';
-      } else if (contenedorPadre === 'windows-grid') {
-        categoria = 'windows';
-      } else if (tarjeta.closest('#contenido-pack-de-optimizacion')) {
-        categoria = 'packs';
-      }
-    }
+  if (imagen) {
+    url += '&img=' + encodeURIComponent(imagen);
   }
-
-
-  window.open('descargar.html?id=' + encodeURIComponent(identificador) + '&cat=' + categoria, '_blank');
+  
+  window.open(url, '_blank');
 }
+
 
 
 const searchProgramas = document.getElementById('searchProgramas');
@@ -118,3 +103,20 @@ if (searchWindows) {
 filtrarProgramas();
 filtrarJuegos();
 filtrarWindows();
+
+const btnSubir = document.getElementById("btnSubir");
+
+window.onscroll = function() {
+  if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+    btnSubir.style.display = "flex"; 
+  } else {
+    btnSubir.style.display = "none";  
+  }
+};
+
+function subirArriba() {
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth" 
+  });
+}

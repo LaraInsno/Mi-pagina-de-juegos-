@@ -323,26 +323,15 @@
       }
     }
   
-  
-    
-    * {
-      box-sizing: border-box; 
-    }
-    body { 
-      background: #000000; 
-      color: #ffffff; 
-      font-family: sans-serif; 
-      text-align: center; 
-      padding: 50px 20px; 
-    }
     .caja-descarga { 
-      max-width: 500px; 
-      width: 100%; 
-      margin: 0 auto; 
-      background: #0a0a0a; 
-      border: 1px solid #330000; 
-      padding: 30px; 
-      border-radius: 12px; 
+    max-width: 500px; 
+    width: 100%; 
+    margin: 50px auto 0; 
+    background: #0a0a0a; 
+    border: 1px solid #330000; 
+    padding: 30px; 
+    border-radius: 12px; 
+    text-align: center; 
     }
     h1 { 
       font-size: 1.8rem; 

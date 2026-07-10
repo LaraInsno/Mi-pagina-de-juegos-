@@ -1,337 +1,13 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+ <link rel="stylesheet" href="style.css">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Pobrecraft, el mejor lugar para descarga gratis los mejores packs de optimización y juegos livianos para Canaima, Intel Atom N455 y PC de bajos recursos. Probado en Windows XP y  en windows 7. ¡Aumenta tus FPS y revive tu PC vieja!">
   <meta name="author" content="Pobrecraft">
   <title>ENLACES POBRECRAFT - Juegos, Programas y Optimizaciones para PC</title>
   <link rel="icon" type="image/png" href="img/icon.webp">
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-    background: #000000;
-    font-family: sans-serif;
-    color: #ffffff;
-    padding: 20px;
-    }
-
-    .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    background: #0a0a0a;
-    padding: 20px;
-    border: 1px solid #330000; 
-    }
-
-    .header {
-      text-align: center;
-      margin-bottom: 0rem;
-    }
-
-    h1 {
-      font-size: 2.8rem;
-      background: linear-gradient(135deg, #ffffff, #dc3545);
-      background-clip: text;
-      -webkit-background-clip: text;
-      color: transparent;
-      margin-bottom: 0.5rem;
-      letter-spacing: -0.02em;
-    }
-
-    .subheader {
-      color: #cccccc;
-      font-size: 1.1rem;
-      border-left: 3px solid #dc3545;
-      padding-left: 1rem;
-      display: inline-block;
-      margin-top: 0.5rem;
-    }
-
-    .badge {
-      background: #1a1a1a;
-      padding: 0.5rem 1.2rem;
-      border-radius: 40px;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      margin-top: 1.5rem;
-      font-size: 0.9rem;
-      color: #cccccc;
-      border: 1px solid #dc3545;
-    }
-
-    .badge span {
-      color: #dc3545;
-      font-weight: bold;
-    }
-
-    .tabs-container {
-      margin: 2rem 0 1.5rem;
-    }
-
-    .tabs {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.75rem;
-      justify-content: center;
-      border-bottom: 1px solid #dc3545;
-      padding-bottom: 1rem;
-    }
-
-    .tab-label {
-      background: #0a0a0a;
-      padding: 0.75rem 1.8rem;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      border: 1px solid #dc3545;
-      font-weight: 600;
-      color: #cccccc;
-    }
-
-    .tab-label:hover {
-      background: #dc3545;
-      color: #ffffff;
-      transform: translateY(-2px);
-    }
-
-    input[type="radio"] {
-      display: none;
-    }
-
-    #tab1:checked ~ .tabs-container .tabs .tab-label[for="tab1"],
-    #tab2:checked ~ .tabs-container .tabs .tab-label[for="tab2"],
-    #tab3:checked ~ .tabs-container .tabs .tab-label[for="tab3"],
-    #tab4:checked ~ .tabs-container .tabs .tab-label[for="tab4"],
-    #tab5:checked ~ .tabs-container .tabs .tab-label[for="tab5"] {
-      background: #dc3545;
-      border-color: #dc3545;
-      color: white;
-      box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
-    }
-
-    .contenidos {
-      margin-top: 2rem;
-    }
-
-    .tab-content {
-      display: none;
-      animation: fadeIn 0.2s ease;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px);}
-      to { opacity: 1; transform: translateY(0);}
-    }
-
-    #tab1:checked ~ .contenidos #contenido-programas,
-    #tab2:checked ~ .contenidos #contenido-juegos,
-    #tab3:checked ~ .contenidos #contenido-sistemas,
-    #tab4:checked ~ .contenidos #contenido-pack-de-optimizacion,
-    #tab5:checked ~ .contenidos #contenido-como-descargar {
-      display: block;
-    }
-
-    .seccion-titulo {
-    font-size: 1.8rem;
-    margin-bottom: 1.5rem;
-    color: #ffffff;
-    border-left: 5px solid #ef4444; 
-    padding-left: 1rem;
-    }
-
-    .search-box {
-      margin-bottom: 2rem;
-      display: flex;
-      justify-content: center;
-    }
-    .search-input {
-    width: 100%;
-    max-width: 400px;
-    padding: 0.8rem;
-    background: #0f0505;
-    border: 1px solid #7f1d1d;
-    color: white;
-    border-radius: 50px;
-    text-align: center;
-    }
-    .search-input:focus {
-    border-color: #ef4444;
-    outline: none;
-  }
-    .search-input::placeholder {
-      color: #888888;
-    }
-    .no-results {
-      text-align: center;
-      color: #888888;
-      padding: 2rem;
-      font-style: italic;
-    }
-
-    .grid-cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 2rem;
-      margin-bottom: 2rem;
-    }
-
-   .card {
-      background: #0d0d0d;
-      border: 1px solid #330000;
-      padding: 15px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      align-items: center;
-      text-align: center;
-      height: 100%;
-      border-radius: 12px;
-      
-      
-      transition: all 0.3s ease;
-    }
-	
-	.card:hover {
-      border-color: #ff0000;
-      box-shadow: 0 4px 15px rgba(255, 0, 0, 0.2);
-      transform: translateY(-5px);
-    }
-
-    .card img {
-      width: 80%;
-      height: 120px;     
-      object-fit: contain; 
-      padding: 10px;       
-      border-radius: 8px;
-    }
-
-    .card strong {
-      font-size: 1.2rem;
-      color: #ffffff;
-      margin-bottom: 0.75rem;
-    }
-
-    .btn-descargar {
-    background: #cc0000; 
-    color: white;
-    text-decoration: none;
-    font-weight: bold;
-    font-size: 0.85rem;
-    
-    display: inline-block;
-    padding: 8px 20px;
-    margin-top: 10px;
-    border-radius: 50px;
-    
-    white-space: nowrap;
-    transition: background 0.3s ease; 
-    }
-
-    .btn-descargar:hover {
-    background: #ff0000; 
-    box-shadow: 0 0 10px #dc3545; 
-    }
-
-    .lista-simple {
-      background: #0a0a0a;
-      border-radius: 1.5rem;
-      padding: 1.5rem;
-      border: 1px solid #dc3545;
-    }
-
-    .lista-simple li {
-      margin-bottom: 1rem;
-      list-style: none;
-      border-bottom: 1px solid #dc3545;
-      padding: 0.8rem 0;
-    }
-
-    footer {
-      text-align: center;
-      margin-top: 2.5rem;
-      padding-top: 1.5rem;
-      border-top: 1px solid #dc3545;
-      color: #888888;
-      font-size: 0.85rem;
-    }
-
-    @media (max-width: 640px) {
-      .container {
-        padding: 10px;
-      }
-      h1 {
-        font-size: 1.8rem;
-      }
-      .subheader {
-        font-size: 0.95rem;
-      }
-     
-      .tabs {
-        gap: 0.5rem;
-      }
-      .tab-label {
-        padding: 0.6rem 0.5rem;
-        font-size: 0.85rem;
-        flex-grow: 1; 
-        text-align: center;
-      }
-      
-      .grid-cards {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-      }
-      .card {
-        padding: 12px;
-      }
-      .card img {
-        height: 100px; 
-      }
-      .search-input {
-        max-width: 100%;
-      }
-    }
-	
-
-      .btn-subir {
-       position: fixed;
-       bottom: 20px;
-       right: 20px;
-       background: #000000;
-       color: white;
-       width: 45px;
-       height: 45px;
-       border-radius: 50%;
-       border: 1px solid #ff0000;
-       display: none; 
-       align-items: center;     
-       justify-content: center; 
-       font-size: 1.2rem;
-       cursor: pointer;
-       transition: all 0.3s ease;
-       z-index: 1000;
-       box-shadow: 0 4px 10px rgba(220, 53, 69, 0.3);
-      }
-
-    .btn-subir:hover {
-      background: #ff0000;
-      transform: translateY(-3px);
-      box-shadow: 0 0 15px #ff0000;
-    }
-
-    @media (max-width: 640px) {
-      .btn-subir {
-        bottom: 15px;
-        right: 15px;
-        width: 40px;
-        height: 40px;
-        line-height: 38px;
-        font-size: 1rem;
-      }
-    }
-  </style>
 </head>
 <body>
 
@@ -366,7 +42,7 @@
       <div class="search-box">
         <input type="text" class="search-input" id="searchProgramas" placeholder="Buscar programa...">
       </div>
-      <div id="programas-grid" class="grid-cards">
+   <div id="programas-grid" class="grid-cards">
          <div class="card" data-name="photoshop cs3"><strong>Photoshop CS3</strong><img src="img/Photoshop.webp" alt="Photoshop" loading="lazy"><a href="#" onclick="irAlEnlace('photoshop', 'img/Photoshop.webp'); return false;" class="btn-descargar">⬇️ Descargar</a></div>
         <div class="card" data-name="vsdc editor video"><strong>VSDC Editor</strong><img src="img/editor.webp" alt="Editor" loading="lazy"><a href="#" onclick="irAlEnlace('vsdc', 'img/editor.webp'); return false;" class="btn-descargar">⬇️ Descargar</a></div>
         <div class="card" data-name="mypal browser navegador"><strong>Mypal Browser</strong><img src="img/mypal.webp" alt="Mypal"><a href="#" onclick="irAlEnlace('Mypal Browser', 'img/mypal.webp'); return false;" class="btn-descargar">⬇️ Descargar</a></div>
@@ -414,13 +90,13 @@
         <div class="card" data-name="terraria"><strong>Terraria</strong><img src="img/Terraria.webp" alt="descargar terraria" loading="lazy"><a href="#" onclick="irAlEnlace('Terraria', 'img/Terraria.webp'); return false;" class="btn-descargar">⬇️ Descargar</a></div>
         <div class="card" data-name="halo combat evolved"><strong>Halo Combat Evolved</strong><img src="img/halo.webp" alt="Halo" loading="lazy"><a href="#" onclick="irAlEnlace('Halo Combat Evolved', 'img/halo.webp'); return false;" class="btn-descargar">⬇️ Descargar</a></div>
         <div class="card" data-name="doom"><strong>Doom</strong><img src="img/doom.webp" alt="Doom" loading="lazy"><a href="#" onclick="irAlEnlace('Doom', 'img/doom.webp'); return false;" class="btn-descargar">⬇️ Descargar</a></div>
-        <div class="card" data-name="five nights at freddy's fnaf"><strong>Five Nights at Freddy's 2</strong><img src="img/fredy.webp" alt="five nights at freddy's 2 pc mediafıre loading="lazy""><a href="#" onclick="irAlEnlace('Five Nights at Freddy s 2', 'img/fredy.webp'); return false;" class="btn-descargar">⬇️ Descargar</a></div>
+        <div class="card" data-name="five nights at freddy's fnaf"><strong>Five Nights at Freddy's 2</strong><img src="img/fredy.webp" alt="five nights at freddy's 2 pc mediafıre" loading="lazy""><a href="#" onclick="irAlEnlace('Five Nights at Freddy s 2', 'img/fredy.webp'); return false;" class="btn-descargar">⬇️ Descargar</a></div>
         <div class="card" data-name="gta vice city"><strong>GTA Vice City</strong><img src="img/vice city.webp" alt="vice" loading="lazy"><a href="#" onclick="irAlEnlace('GTA Vice City', 'img/vice city.webp'); return false;" class="btn-descargar">⬇️ Descargar</a></div>
         <div class="card" data-name="warcraft iii"><strong>Warcraft III V1.27</strong><img src="img/warcraft.webp" alt="warcraft" loading="lazy"><a href="#" onclick="irAlEnlace('Warcraft III V1.27', 'img/warcraft.webp'); return false;" class="btn-descargar">⬇️ Descargar</a></div>
         <div class="card" data-name="plantas vs zombie plantas"><strong>Plantas VS Zombie</strong><img src="img/plantas xd.webp" alt="plants" loading="lazy"><a href="#" onclick="irAlEnlace('Plantas VS Zombie', 'img/plantas xd.webp'); return false;" class="btn-descargar">⬇️ Descargar</a></div>
         <div class="card" data-name="death road to canada"><strong>Death Road to Canada</strong><img src="img/canada.webp" alt="canada" loading="lazy"><a href="#" onclick="irAlEnlace('Death Road to Canada', 'img/canada.webp'); return false;" class="btn-descargar">⬇️ Descargar</a></div>
         <div class="card" data-name="call of duty 1"><strong>Call of Duty 1</strong><img src="img/Call of Duty 1.webp" alt="cod" loading="lazy"><a href="#" onclick="irAlEnlace('Call of Duty 1', 'img/Call of Duty 1.webp'); return false;" class="btn-descargar">⬇️ Descargar</a></div>
-        <div class="card" data-name="gta 3"><strong>GTA 3</strong><img src="img/GTA 3.webp" alt="gta3" loading="lazy"><a href="#" onclick="irAlEnlace('GTA 3', img/GTA 3.webp); return false;" class="btn-descargar">⬇️ Descargar</a></div>
+        <div class="card" data-name="gta 3"><strong>GTA 3</strong><img src="img/GTA 3.webp" alt="gta3" loading="lazy"><a href="#" onclick="irAlEnlace('GTA 3', 'img/GTA 3.webp'); return false;" class="btn-descargar">⬇️ Descargar</a></div>
         <div class="card" data-name="assaultcube"><strong>AssaultCube</strong><img src="img/asalto.webp" alt="assault" loading="lazy"><a href="#" onclick="irAlEnlace('AssaultCube', 'img/asalto.webp'); return false;" class="btn-descargar">⬇️ Descargar</a></div>
         <div class="card" data-name="dragonball z budokai"><strong>Dragonball Z Budokai X</strong><img src="img/Dragonball z budokai x.webp" alt="dbz" loading="lazy"><a href="#" onclick="irAlEnlace('Dragonball Z Budokai X', 'img/Dragonball z budokai x.webp'); return false;" class="btn-descargar">⬇️ Descargar</a></div>
         <div class="card" data-name="fruit ninja"><strong>Fruit Ninja</strong><img src="img/Fruit ninja.webp" alt="fruit" loading="lazy"><a href="#" onclick="irAlEnlace('Fruit Ninja', 'img/Fruit ninja.webp'); return false;" class="btn-descargar">⬇️ Descargar</a></div>
@@ -459,7 +135,7 @@
         <div class="card" data-name="pack de Juegos Fash 2"><strong>Pack de Juegos Fash 2</strong><img src="img/flash.webp" alt="flash" loading="lazy"><a href="#" onclick="irAlEnlace('Pack de Juegos Fash 2', 'img/flash.webp'); return false;" class="btn-descargar">⬇️ Descargar</a></div>
         <div class="card" data-name="pack de Juegos Fash 3"><strong>Pack de Juegos Fash 3</strong><img src="img/flash.webp" alt="flash" loading="lazy"><a href="#" onclick="irAlEnlace('Pack de Juegos Fash 3', 'img/flash.webp'); return false;" class="btn-descargar">⬇️ Descargar</a></div>
         <div class="card" data-name="papas games flash"><strong>Papas Games</strong><img src="img/papa.webp" alt="papas" loading="lazy"><a href="#" onclick="irAlEnlace('Papas Games', 'img/papa.webp'); return false;" class="btn-descargar">⬇️ Descargar</a></div>
-        <div class="card" data-name="epic battle fantasy flash"><strong>Epic Battle Fantasy</strong><img src="img/Epic Battle Fantasy.webp" alt="epic" loading="lazy"><a href="#" onclick="irAlEnlace('Epic Battle Fantasy', img/Epic 'Battle Fantasy.webp'); return false;" class="btn-descargar">⬇️ Descargar</a></div>
+        <div class="card" data-name="epic battle fantasy flash"><strong>Epic Battle Fantasy</strong><img src="img/Epic Battle Fantasy.webp" alt="epic" loading="lazy"><a href="#" onclick="irAlEnlace('Epic Battle Fantasy', 'img/Epic 'Battle Fantasy.webp'); return false;" class="btn-descargar">⬇️ Descargar</a></div>
         <div class="card" data-name="arcuz ii dungeons flash"><strong>Arcuz II Dungeons</strong><img src="img/Arcuz II Dungeons.webp" alt="arcuz" loading="lazy"><a href="#" onclick="irAlEnlace('Arcuz II Dungeons', 'img/Arcuz II Dungeons.webp'); return false;" class="btn-descargar">⬇️ Descargar</a></div>
       </div>
      
@@ -501,7 +177,6 @@
 		  <div class="card"><strong>Optimizador Windows XP</strong><img src="img/pack.webp" alt="arcuz" loading="lazy"><a href="#" onclick="irAlEnlace('Optimizador Windows xp', 'img/pack.webp'); return false;" class="btn-descargar">⬇️ Descargar</a></div>
       </div>
     </div>
-
     
     <div id="contenido-como-descargar" class="tab-content">
       <h2 class="seccion-titulo">¿Cómo descargar?</h2>

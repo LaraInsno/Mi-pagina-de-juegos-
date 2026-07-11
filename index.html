@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
- <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Pobrecraft, el mejor lugar para descarga gratis los mejores packs de optimización y juegos livianos para Canaima, Intel Atom N455 y PC de bajos recursos. Probado en Windows XP y  en windows 7. ¡Aumenta tus FPS y revive tu PC vieja!">
@@ -38,11 +38,16 @@
 
   <div class="contenidos">
     
-    <div id="contenido-programas" class="tab-content">
-      <div class="search-box">
-        <input type="text" class="search-input" id="searchProgramas" placeholder="Buscar programa...">
-      </div>
-   <div id="programas-grid" class="grid-cards">
+	  <div id="contenido-programas" class="tab-content">
+  <div class="search-box">
+    <div class="search-wrapper">
+      <input type="text" class="search-input" id="searchProgramas" placeholder="Buscar programa...">
+      <button class="btn-buscar" id="btnSearchProgramas">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      </button>
+    </div>
+  </div>
+      <div id="programas-grid" class="grid-cards">
          <div class="card" data-name="photoshop cs3"><strong>Photoshop CS3</strong><img src="img/Photoshop.webp" alt="Photoshop" loading="lazy"><a href="#" onclick="irAlEnlace('photoshop', 'img/Photoshop.webp'); return false;" class="btn-descargar">⬇️ Descargar</a></div>
         <div class="card" data-name="vsdc editor video"><strong>VSDC Editor</strong><img src="img/editor.webp" alt="Editor" loading="lazy"><a href="#" onclick="irAlEnlace('vsdc', 'img/editor.webp'); return false;" class="btn-descargar">⬇️ Descargar</a></div>
         <div class="card" data-name="mypal browser navegador"><strong>Mypal Browser</strong><img src="img/mypal.webp" alt="Mypal"><a href="#" onclick="irAlEnlace('Mypal Browser', 'img/mypal.webp'); return false;" class="btn-descargar">⬇️ Descargar</a></div>
@@ -79,10 +84,16 @@
        No se encontraron programas con ese nombre
       </div>
       </div>
-    <div id="contenido-juegos" class="tab-content">
-      <div class="search-box">
-        <input type="text" class="search-input" id="searchJuegos" placeholder="Buscar juego...">
-      </div>
+	  
+   <div id="contenido-juegos" class="tab-content">
+  <div class="search-box">
+    <div class="search-wrapper">
+      <input type="text" class="search-input" id="searchJuegos" placeholder="Buscar juego...">
+      <button class="btn-buscar" id="btnSearchJuegos">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      </button>
+    </div>
+  </div>
       <div id="juegos-grid" class="grid-cards">
       <div class="card" data-name="counter strike 1.6 cs"><strong>Counter Strike 1.6</strong><img src="img/counter.webp" alt="CS 1.6" loading="lazy"><a href="#" onclick="irAlEnlace('Counter Strike 1.6', 'img/counter.webp'); return false;" class="btn-descargar">⬇️ Descargar</a></div>
         <div class="card" data-name="gta san andreas"><strong>GTA San Andreas</strong><img src="img/gta.webp" alt="gta san andreas para canaima" loading="lazy"><a href="#" onclick="irAlEnlace('GTA San Andreas', 'img/gta.webp'); return false;" class="btn-descargar">⬇️ Descargar</a></div>
@@ -136,7 +147,7 @@
         <div class="card" data-name="pack de Juegos Fash 2"><strong>Pack de Juegos Fash 2</strong><img src="img/flash.webp" alt="flash" loading="lazy"><a href="#" onclick="irAlEnlace('Pack de Juegos Fash 2', 'img/flash.webp'); return false;" class="btn-descargar">⬇️ Descargar</a></div>
         <div class="card" data-name="pack de Juegos Fash 3"><strong>Pack de Juegos Fash 3</strong><img src="img/flash.webp" alt="flash" loading="lazy"><a href="#" onclick="irAlEnlace('Pack de Juegos Fash 3', 'img/flash.webp'); return false;" class="btn-descargar">⬇️ Descargar</a></div>
         <div class="card" data-name="papas games flash"><strong>Papas Games</strong><img src="img/papa.webp" alt="papas" loading="lazy"><a href="#" onclick="irAlEnlace('Papas Games', 'img/papa.webp'); return false;" class="btn-descargar">⬇️ Descargar</a></div>
-        <div class="card" data-name="epic battle fantasy flash"><strong>Epic Battle Fantasy</strong><img src="img/Epic Battle Fantasy.webp" alt="epic" loading="lazy"><a href="#" onclick="irAlEnlace('Epic Battle Fantasy', 'img/Epic Battle Fantasy.webp'); return false;" class="btn-descargar">⬇️ Descargar</a></div>
+        <div class="card" data-name="epic battle fantasy flash"><strong>Epic Battle Fantasy</strong><img src="img/Epic Battle Fantasy.webp" alt="epic" loading="lazy"><a href="#" onclick="irAlEnlace('Epic Battle Fantasy','img/Epic Battle Fantasy.webp'); return false;" class="btn-descargar">⬇️ Descargar</a></div>
         <div class="card" data-name="arcuz ii dungeons flash"><strong>Arcuz II Dungeons</strong><img src="img/Arcuz II Dungeons.webp" alt="arcuz" loading="lazy"><a href="#" onclick="irAlEnlace('Arcuz II Dungeons', 'img/Arcuz II Dungeons.webp'); return false;" class="btn-descargar">⬇️ Descargar</a></div>
       </div>
      
@@ -149,10 +160,16 @@
       </div>
 	  </div>
     
-        <div id="contenido-sistemas" class="tab-content">
-         <div class="search-box">
-         <input type="text" id="searchWindows" class="search-input" placeholder="Buscar Windows...">
-          </div>
+
+		  <div id="contenido-sistemas" class="tab-content">
+  <div class="search-box">
+    <div class="search-wrapper">
+      <input type="text" class="search-input" id="searchWindows" placeholder="Buscar Windows...">
+      <button class="btn-buscar" id="btnSearchWindows">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      </button>
+    </div>
+  </div>
 
       <div id="noResultsWindows" class="no-results" style="display:none;">
       <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block; margin: 0 auto 10px;">
@@ -178,6 +195,7 @@
 		  <div class="card"><strong>Optimizador Windows XP</strong><img src="img/pack.webp" alt="arcuz" loading="lazy"><a href="#" onclick="irAlEnlace('Optimizador Windows xp', 'img/pack.webp'); return false;" class="btn-descargar">⬇️ Descargar</a></div>
       </div>
     </div>
+
     
     <div id="contenido-como-descargar" class="tab-content">
       <h2 class="seccion-titulo">¿Cómo descargar?</h2>
@@ -193,7 +211,6 @@
   <footer>
     <p>Creado por <strong>pobrecraft_15</strong></p>
   </footer>
-</div>
 
 <button id="btnSubir" class="btn-subir" onclick="subirArriba()">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">

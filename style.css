@@ -133,28 +133,55 @@
     padding-left: 1rem;
     }
 
-    .search-box {
-      margin-bottom: 2rem;
-      display: flex;
-      justify-content: center;
-    }
-    .search-input {
-    width: 100%;
-    max-width: 400px;
-    padding: 0.8rem;
-    background: #0f0505;
-    border: 1px solid #7f1d1d;
-    color: white;
-    border-radius: 50px;
-    text-align: center;
-    }
-    .search-input:focus {
-    border-color: #ef4444;
-    outline: none;
-  }
-    .search-input::placeholder {
-      color: #888888;
-    }
+.search-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto; 
+  margin-bottom: 2rem; 
+}
+
+.search-input {
+  width: 100%;
+
+  padding: 0.8rem 3rem 0.8rem 1.5rem; 
+  background: #0f0505;
+  border: 1px solid #7f1d1d;
+  color: white;
+  border-radius: 50px;
+  text-align: left; 
+}
+
+.search-input:focus {
+  border-color: #ef4444;
+  outline: none;
+}
+
+.search-input::placeholder {
+  color: #888888;
+}
+
+
+.btn-buscar {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #888888;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+  transition: all 0.2s ease;
+}
+
+.btn-buscar:hover {
+  color: #ef4444;
+  transform: translateY(-50%) scale(1.1);
+}
     .no-results {
       text-align: center;
       color: #888888;
@@ -407,3 +434,37 @@
         font-size: 1.1rem;
       }
     }
+	
+.sugerencias-box {
+  position: absolute;
+  top: 45px; /* Altura justo debajo del input */
+  width: 100%;
+  max-width: 400px;
+  background: #0f0505;
+  border: 1px solid #7f1d1d;
+  border-radius: 0 0 15px 15px;
+  z-index: 1000;
+  overflow: hidden;
+  display: none;
+  text-align: left;
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.7);
+}
+
+.sugerencia-item {
+  padding: 10px 20px;
+  cursor: pointer;
+  color: #cccccc;
+  border-bottom: 1px solid #330000;
+  transition: all 0.2s ease;
+  font-size: 0.95rem;
+}
+
+.sugerencia-item:last-child {
+  border-bottom: none;
+}
+
+.sugerencia-item:hover {
+  background: #dc3545;
+  color: #ffffff;
+  padding-left: 25px; 
+}

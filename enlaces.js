@@ -1,8 +1,10 @@
 function irAlEnlace(identificador, imagen) {
   let url = 'descargar.html?id=' + encodeURIComponent(identificador);
+  
   if (imagen) {
     url += '&img=' + encodeURIComponent(imagen);
   }
+  
   window.open(url, '_blank');
 }
 

@@ -399,7 +399,7 @@
     }
 	
      .img-producto {
-      max-width: 160px; 
+      max-width: 110px; 
       width: 100%;
       height: auto;
       margin: 15px auto;
@@ -467,4 +467,29 @@
   background: #dc3545;
   color: #ffffff;
   padding-left: 25px; 
+}
+
+
+.requisitos-descarga {
+  color: #cccccc;
+  padding: 12px;
+  border-radius: 8px;
+  margin: 15px auto;
+  max-width: 85%;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.requisitos-descarga strong {
+  color: #FFFFFF;
+  display: block;
+  margin-bottom: 5px;
+  font-size: 1.1rem;
+}
+
+
+.requisitos-descarga b {
+  color: #FFFFFF; 
+  font-weight: bold;
 }

@@ -1,35 +1,57 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
- <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Preparando Descarga</title>
   </head>
 <body>
 
-
  <div class="caja-descarga">
   <h1 id="titulo-producto">Preparando Descarga</h1>
-  <p>Tu archivo se está procesando de manera segura.</p>
+<p>Tu archivo se está procesando de manera segura.</p>
   
   <img id="imagen-producto" class="img-producto" src="" alt="Imagen del archivo">
   
   <div id="contenedor-enlace">
     </div>
+	
+	 <div id="contenedor-requisitos" class="requisitos-descarga" style="display: none;"></div>
 </div>
 
 <script>
-    const urlParams = new URLSearchParams(window.location.search);
+const urlParams = new URLSearchParams(window.location.search);
     const identificador = urlParams.get('id');
-    const imagenUrl = urlParams.get('img'); 
+    const imagenUrl = urlParams.get('img');
+
+
+    const URL_REQUISITOS = 'https://api.npoint.io/2c32572fc263665953f2'; 
+
+    if (identificador) {
+      fetch(URL_REQUISITOS)
+        .then(res => {
+          if (!res.ok) throw new Error("No se pudo descargar el JSON desde npoint");
+          return res.json();
+        })
+        .then(datosRequisitos => {
+       
+          const req = datosRequisitos[identificador];
+          
+          if (req) {
+            const divReq = document.getElementById('contenedor-requisitos');
+            divReq.innerHTML = "<strong>Requisitos Mínimos:</strong><br>" + req;
+            divReq.style.display = 'block'; 
+          }
+        })
+        .catch(err => console.error("Error al cargar los requisitos remotos:", err));
+    }
     
    
     if (identificador) {
       document.getElementById('titulo-producto').innerText = identificador;
     }
 
-    
     if (imagenUrl) {
       const imgElement = document.getElementById('imagen-producto');
       imgElement.src = decodeURIComponent(imagenUrl);

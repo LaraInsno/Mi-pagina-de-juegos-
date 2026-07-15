@@ -122,7 +122,7 @@
     function mostrarBoton() {
         if (!contenedorEnlace) return;
         if (enlaceReal) {
-            contenedorEnlace.innerHTML = `<a href="${enlaceReal}" class="btn-obtener" rel="nofollow noopener noreferrer" target="_blank">⚡ Descargar desde MediaFire</a>`;
+            contenedorEnlace.innerHTML = `<a href="${enlaceReal}" class="btn-obtener" rel="nofollow noopener noreferrer" target="_blank">Ir a la descarga</a>`;
         } else if (errorCarga) {
             contenedorEnlace.innerHTML = '<span style="color:#ff3333; font-weight:bold;">Error: El enlace no se pudo cargar, no existe o no tienes internet.</span>';
         } else {

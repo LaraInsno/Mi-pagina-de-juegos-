@@ -5,120 +5,131 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Preparando Descarga</title>
-  </head>
+</head>
 <body>
 
- <div class="caja-descarga">
-  <h1 id="titulo-producto">Preparando Descarga</h1>
-<p>Tu archivo se está procesando de manera segura.</p>
-  
-  <img id="imagen-producto" class="img-producto" src="" alt="Imagen del archivo">
-  
-  <div id="contenedor-enlace">
+<div class="caja-descarga">
+    
+    
+    <img id="imagen-producto" class="img-producto" src="" alt="Icono" style="display: none;"> <h1 id="titulo-producto">Cargando...</h1>
+    <p>Tu archivo se está procesando de manera segura.</p>
+    
+    <div id="contenedor-enlace" style="margin: 40px auto; min-height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+        <span class="contador-texto" id="texto-estado">Preparando la descarga...</span>
     </div>
-	
-	 <div id="contenedor-requisitos" class="requisitos-descarga" style="display: none;"></div>
+
+    <div id="contenedor-requisitos" class="seccion-requisitos" style="display: none;"></div>
 </div>
 
 <script>
-const urlParams = new URLSearchParams(window.location.search);
+   const urlParams = new URLSearchParams(window.location.search);
     const identificador = urlParams.get('id');
     const imagenUrl = urlParams.get('img');
 
-
-    const URL_REQUISITOS = 'https://api.npoint.io/2c32572fc263665953f2'; 
-
-    if (identificador) {
-      fetch(URL_REQUISITOS)
-        .then(res => {
-          if (!res.ok) throw new Error("No se pudo descargar el JSON desde npoint");
-          return res.json();
-        })
-        .then(datosRequisitos => {
-       
-          const req = datosRequisitos[identificador];
-          
-          if (req) {
-            const divReq = document.getElementById('contenedor-requisitos');
-            divReq.innerHTML = "<strong>Requisitos Mínimos:</strong><br>" + req;
-            divReq.style.display = 'block'; 
-          }
-        })
-        .catch(err => console.error("Error al cargar los requisitos remotos:", err));
-    }
-    
-   
-    if (identificador) {
-      document.getElementById('titulo-producto').innerText = identificador;
-    }
-
+    // Mostrar icono y título
     if (imagenUrl) {
       const imgElement = document.getElementById('imagen-producto');
-      imgElement.src = decodeURIComponent(imagenUrl);
-      imgElement.style.display = 'block'; 
-    }
-
-   
-    let enlaceReal = null;
-    let contadorTerminado = false;
-    let errorCarga = false;
-
-    const URL_EXTERNA = 'https://api.npoint.io/75ddbc009854c5b30240';
-
-    
-    const contenedor = document.getElementById('contenedor-enlace');
-
-    function actualizarContenedor() {
-      if (contenedor) { 
-        if (contadorTerminado) {
-          if (enlaceReal) {
-            contenedor.innerHTML = '<a href="' + enlaceReal + '" class="btn-obtener" rel="nofollow noopener noreferrer" target="_blank">IR A LA DESCARGA</a>';
-          } else if (errorCarga) {
-            contenedor.innerHTML = '<span style="color:#ff3333; font-weight:bold;">Error: El enlace no se pudo cargar o no existe.</span>';
-          } else {
-            contenedor.innerHTML = '<span class="contador-texto">Generando enlace seguro... por favor espera</span>';
-          }
-        }
+      if (imgElement) {
+        imgElement.src = decodeURIComponent(imagenUrl);
+        imgElement.style.display = 'block'; 
       }
     }
 
-    fetch(URL_EXTERNA)
-      .then(res => {
-        if (!res.ok) throw new Error("Error al conectar con el servidor de enlaces");
-        return res.json();
+    if (identificador) {
+        document.getElementById('titulo-producto').textContent = identificador;
+        document.title = "Descargando: " + identificador; 
+    }
+
+
+    const APIS_REQUISITOS = [
+        { clave: 'npoint_req_1', url: 'https://api.npoint.io/baa6be5ab9366df087a5' },
+        { clave: 'npoint_req_2', url: 'https://api.npoint.io/2c32572fc263665953f2' },
+        { clave: 'npoint_req_3', url: 'https://api.npoint.io/00a83ff636223d29349d' }
+    ];
+
+    if (identificador) {
+      const promesasRequisitos = APIS_REQUISITOS.map(api => {
+          const guardado = sessionStorage.getItem(api.clave);
+    
+          if (guardado) return Promise.resolve(JSON.parse(guardado));
+          return fetch(api.url).then(res => res.ok ? res.json() : {}).catch(() => ({}));
+      });
+
+      Promise.all(promesasRequisitos)
+      .then(resultados => {
+        let requisitosHtml = null;
+
+        for (const datos of resultados) {
+          if (datos && datos[identificador]) {
+            requisitosHtml = datos[identificador];
+            break; 
+          }
+        }
+
+        let contenedor = document.getElementById('contenedor-requisitos');
+        if (requisitosHtml && contenedor) {
+          contenedor.innerHTML = '<h3>Requisitos Mínimos:</h3>' + requisitosHtml;
+          contenedor.style.display = 'block'; 
+          
+          if (requisitosHtml.length > 150) {
+              contenedor.classList.add('requisitos-largos');
+          }
+        }
       })
+      .catch(err => console.error("Error al cargar requisitos:", err));
+    }
+
+    let enlaceReal = null;
+    let errorCarga = false;
+    let segundosRestantes = 5;
+    const contenedorEnlace = document.getElementById('contenedor-enlace');
+    
+  
+    const URL_EXTERNA = 'https://api.npoint.io/75ddbc009854c5b30240';
+
+    fetch(URL_EXTERNA)
+      .then(res => res.ok ? res.json() : Promise.reject("Error de red"))
       .then(datos => {
         let enlaceObtenido = datos[identificador];
-        
         if (enlaceObtenido) {
             enlaceReal = atob(enlaceObtenido);
-            actualizarContenedor(); 
         } else {
             errorCarga = true;
-            actualizarContenedor();
         }
       })
       .catch(err => {
-        console.error("Error al obtener los enlaces:", err);
+        console.error("Error al obtener enlace:", err);
         errorCarga = true;
-        actualizarContenedor();
       });
 
-   let segundosRestantes = 5;
+    // Iniciar cuenta regresiva
+    iniciarCuenta();
 
-   const cuentaRegresiva = setInterval(() => {
-    segundosRestantes--;
-
-    if (contenedor) { 
-      if (segundosRestantes > 0) {
-         contenedor.innerHTML = '<span class="contador-texto">Tu enlace estará listo en ' + segundosRestantes + ' segundos...</span>';
-       } else {
-        clearInterval(cuentaRegresiva);
-        contadorTerminado = true;
-         actualizarContenedor(); 
-      }
+    function iniciarCuenta() {
+        const cuentaRegresiva = setInterval(() => {
+          segundosRestantes--;
+          if (contenedorEnlace) { 
+            if (segundosRestantes > 0) {
+               contenedorEnlace.innerHTML = `<span class="contador-texto">Tu enlace estará listo en ${segundosRestantes} segundos...</span>`;
+            } else {
+              clearInterval(cuentaRegresiva);
+              mostrarBoton(); 
+            }
+          }
+        }, 1000);
     }
-  }, 1000);
-  </script>
+
+    function mostrarBoton() {
+        if (!contenedorEnlace) return;
+        if (enlaceReal) {
+            contenedorEnlace.innerHTML = `<a href="${enlaceReal}" class="btn-obtener" rel="nofollow noopener noreferrer" target="_blank">⚡ Descargar desde MediaFire</a>`;
+        } else if (errorCarga) {
+            contenedorEnlace.innerHTML = '<span style="color:#ff3333; font-weight:bold;">Error: El enlace no se pudo cargar, no existe o no tienes internet.</span>';
+        } else {
+            contenedorEnlace.innerHTML = '<span style="color:#ff3333; font-weight:bold;">Generando enlace...</span>';
+            setTimeout(mostrarBoton, 1000);
+        }
+    }
+</script>
 </body>
 </html>

@@ -22,11 +22,11 @@
 </div>
 
 <script>
-   const urlParams = new URLSearchParams(window.location.search);
+    const urlParams = new URLSearchParams(window.location.search);
     const identificador = urlParams.get('id');
     const imagenUrl = urlParams.get('img');
 
-    // Mostrar icono y título
+
     if (imagenUrl) {
       const imgElement = document.getElementById('imagen-producto');
       if (imgElement) {
@@ -41,51 +41,37 @@
     }
 
 
-    const APIS_REQUISITOS = [
-        { clave: 'npoint_req_1', url: 'https://api.npoint.io/baa6be5ab9366df087a5' },
-        { clave: 'npoint_req_2', url: 'https://api.npoint.io/2c32572fc263665953f2' },
-        { clave: 'npoint_req_3', url: 'https://api.npoint.io/00a83ff636223d29349d' }
-    ];
-
     if (identificador) {
-      const promesasRequisitos = APIS_REQUISITOS.map(api => {
-          const guardado = sessionStorage.getItem(api.clave);
-    
-          if (guardado) return Promise.resolve(JSON.parse(guardado));
-          return fetch(api.url).then(res => res.ok ? res.json() : {}).catch(() => ({}));
-      });
-
-      Promise.all(promesasRequisitos)
-      .then(resultados => {
-        let requisitosHtml = null;
-
-        for (const datos of resultados) {
-          if (datos && datos[identificador]) {
-            requisitosHtml = datos[identificador];
-            break; 
-          }
-        }
-
-        let contenedor = document.getElementById('contenedor-requisitos');
-        if (requisitosHtml && contenedor) {
-          contenedor.innerHTML = '<h3>Requisitos Mínimos:</h3>' + requisitosHtml;
-          contenedor.style.display = 'block'; 
-          
-          if (requisitosHtml.length > 150) {
-              contenedor.classList.add('requisitos-largos');
-          }
-        }
-      })
-      .catch(err => console.error("Error al cargar requisitos:", err));
+        fetch('requisitos.json')
+            .then(res => {
+                if (!res.ok) throw new Error("Error al cargar el archivo JSON");
+                return res.json();
+            })
+            .then(datos => {
+                if (datos && datos[identificador]) {
+                    const requisitosHtml = datos[identificador];
+                    const contenedor = document.getElementById('contenedor-requisitos');
+                    
+                    if (contenedor) {
+                        contenedor.innerHTML = '<h3>Requisitos Mínimos:</h3>' + requisitosHtml;
+                        contenedor.style.display = 'block'; 
+                        
+                        if (requisitosHtml.length > 150) {
+                            contenedor.classList.add('requisitos-largos');
+                        }
+                    }
+                }
+            })
+            .catch(err => console.error("Error al cargar requisitos:", err));
     }
+
 
     let enlaceReal = null;
     let errorCarga = false;
     let segundosRestantes = 5;
     const contenedorEnlace = document.getElementById('contenedor-enlace');
     
-  
-    const URL_EXTERNA = 'https://api.npoint.io/75ddbc009854c5b30240';
+    const URL_EXTERNA = 'https://api.npoint.io/3939cff6eafb0c9d9527';
 
     fetch(URL_EXTERNA)
       .then(res => res.ok ? res.json() : Promise.reject("Error de red"))
@@ -102,7 +88,7 @@
         errorCarga = true;
       });
 
-    // Iniciar cuenta regresiva
+
     iniciarCuenta();
 
     function iniciarCuenta() {

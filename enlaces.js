@@ -137,3 +137,26 @@ document.addEventListener('DOMContentLoaded', () => {
   configurarBuscador('searchJuegos', 'btnSearchJuegos', 'juegos-grid', 'noResultsJuegos');
   configurarBuscador('searchWindows', 'btnSearchWindows', 'windows-grid', 'noResultsWindows');
 });
+
+
+const APIS_REQUISITOS_PRECARGA = {
+    'npoint_req_1': 'https://api.npoint.io/baa6be5ab9366df087a5',
+    'npoint_req_2': 'https://api.npoint.io/2c32572fc263665953f2',
+    'npoint_req_3': 'https://api.npoint.io/00a83ff636223d29349d'
+};
+
+window.addEventListener('load', () => {
+    for (const [clave, url] of Object.entries(APIS_REQUISITOS_PRECARGA)) {
+        // Solo lo descarga si no está guardado ya
+        if (!sessionStorage.getItem(clave)) {
+            fetch(url)
+                .then(res => res.ok ? res.json() : null)
+                .then(datos => {
+                    if (datos) {
+                        sessionStorage.setItem(clave, JSON.stringify(datos));
+                    }
+                })
+                .catch(err => console.error("Error precargando", clave));
+        }
+    }
+});

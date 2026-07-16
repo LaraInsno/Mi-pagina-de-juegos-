@@ -139,3 +139,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
+fetch('requisitos.json')
+    .then(res => {
+        if (res.ok) console.log("Archivo requisitos.json pre-cargado con éxito para mayor velocidad.");
+    })
+    .catch(err => console.error("Error al intentar pre-cargar requisitos.json:", err));
+});

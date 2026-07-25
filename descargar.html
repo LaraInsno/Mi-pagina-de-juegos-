@@ -1,101 +1,54 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <link rel="stylesheet" href="style.css">
-  <meta charset="UTF-8">
-  <meta name="robots" content="noindex, follow">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Preparando Descarga</title>
-</head>
-<body>
-
-<div class="caja-descarga">
-    
-    
-    <img id="imagen-producto" class="img-producto" src="" alt="Icono" style="display: none;"> <h1 id="titulo-producto">Cargando...</h1>
-    <p>Tu archivo se está procesando de manera segura.</p>
-    
-    <div id="contenedor-enlace" style="margin: 40px auto; min-height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-        <span class="contador-texto" id="texto-estado">Preparando la descarga...</span>
-    </div>
-
-
-<div id="frame" style="width: 100%;margin: auto;position: relative; z-index: 99998;">
-          <iframe data-aa='2448508' src='//acceptable.a-ads.com/2448508/?size=Adaptive'
-                            style='border:0; padding:0; width:70%; height:auto; overflow:hidden;display: block;margin: auto'></iframe></div>
-
-    <div id="contenedor-requisitos" class="seccion-requisitos" style="display: none;"></div>
-	
-</div>
-
-<script>
+<!doctypehtml><html lang="es"><meta charset="UTF-8"><meta content="width=device-width,initial-scale=1"name="viewport"><link href="https://api.npoint.io"rel="preconnect"crossorigin><link href="https://acceptable.a-ads.com"rel="preconnect"crossorigin><link href="style.css"rel="stylesheet"><title>Preparando Descarga</title><div class="caja-descarga"><img alt="Icono"class="img-producto"id="imagen-producto"loading="lazy"src=""style="display:none"><h1 id="titulo-producto">Cargando...</h1><p>Tu archivo se está procesando de manera segura.<div id="contenedor-enlace"style="margin:40px auto;min-height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center"><span class="contador-texto"id="texto-estado">Preparando la descarga...</span></div><div id="frame"style="width:100%;margin:auto;position:relative;z-index:99998"><iframe data-aa="2448508"loading="lazy"src="//acceptable.a-ads.com/2448508/?size=Adaptive"style="border:0;padding:0;width:70%;height:auto;overflow:hidden;display:block;margin:auto"></iframe></div><div id="contenedor-requisitos"style="display:none"class="seccion-requisitos"></div></div><script>// Optimización: Cacheo de variables globales
     const urlParams = new URLSearchParams(window.location.search);
     const identificador = urlParams.get('id');
     const imagenUrl = urlParams.get('img');
+    const imgElement = document.getElementById('imagen-producto');
+    const tituloElement = document.getElementById('titulo-producto');
+    const contenedorRequisitos = document.getElementById('contenedor-requisitos');
+    const contenedorEnlace = document.getElementById('contenedor-enlace');
 
-
-    if (imagenUrl) {
-      const imgElement = document.getElementById('imagen-producto');
-      if (imgElement) {
+    if (imagenUrl && imgElement) {
         imgElement.src = decodeURIComponent(imagenUrl);
         imgElement.style.display = 'block'; 
-      }
     }
 
     if (identificador) {
-        document.getElementById('titulo-producto').textContent = identificador;
+        tituloElement.textContent = identificador;
         document.title = "Descargando: " + identificador; 
-    }
-
-
-    if (identificador) {
+        
         fetch('requisitos.json')
             .then(res => {
                 if (!res.ok) throw new Error("Error al cargar el archivo JSON");
                 return res.json();
             })
             .then(datos => {
-                if (datos && datos[identificador]) {
+                if (datos && datos[identificador] && contenedorRequisitos) {
                     const requisitosHtml = datos[identificador];
-                    const contenedor = document.getElementById('contenedor-requisitos');
+                    contenedorRequisitos.innerHTML = '<h3>Requisitos Mínimos:</h3>' + requisitosHtml;
+                    contenedorRequisitos.style.display = 'block'; 
                     
-                    if (contenedor) {
-                        contenedor.innerHTML = '<h3>Requisitos Mínimos:</h3>' + requisitosHtml;
-                        contenedor.style.display = 'block'; 
-                        
-                        if (requisitosHtml.length > 150) {
-                            contenedor.classList.add('requisitos-largos');
-                        }
-                    }
+                    if (requisitosHtml.length > 150) contenedorRequisitos.classList.add('requisitos-largos');
                 }
             })
             .catch(err => console.error("Error al cargar requisitos:", err));
     }
 
-
     let enlaceReal = null;
     let errorCarga = false;
     let segundosRestantes = 5;
-    const contenedorEnlace = document.getElementById('contenedor-enlace');
-    
     const URL_EXTERNA = 'https://api.npoint.io/aed93b16e7cac913da7c';
 
-fetch(URL_EXTERNA)
+    fetch(URL_EXTERNA)
       .then(res => res.ok ? res.json() : Promise.reject("Error de red"))
       .then(datos => {
         let enlaceObtenido = datos[identificador];
-        if (enlaceObtenido) {
-       
-            enlaceReal = enlaceObtenido; 
-        } else {
-            errorCarga = true;
-        }
+        if (enlaceObtenido) enlaceReal = enlaceObtenido; 
+        else errorCarga = true;
       })
       .catch(err => {
         console.error("Error al obtener enlace:", err);
         errorCarga = true;
       });
-
 
     iniciarCuenta();
 
@@ -123,7 +76,4 @@ fetch(URL_EXTERNA)
             contenedorEnlace.innerHTML = '<span style="color:#ff3333; font-weight:bold;">Generando enlace...</span>';
             setTimeout(mostrarBoton, 1000);
         }
-    }
-</script>
-</body>
-</html>
+    }</script>

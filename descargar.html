@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="preconnect" href="https://api.npoint.io" crossorigin><link rel="preconnect" href="https://acceptable.a-ads.com" crossorigin><link rel="stylesheet" href="style.css"><title>Preparando Descarga</title></head><body><div class="caja-descarga"><img id="imagen-producto" class="img-producto" src="" alt="Icono" style="display:none" decoding="async" fetchpriority="high"><h1 id="titulo-producto">Cargando...</h1><p>Tu archivo se está procesando de manera segura.</p><div id="contenedor-enlace" style="margin:40px auto;min-height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center"><span class="contador-texto" id="texto-estado">Preparando la descarga...</span></div><div id="frame" style="width:100%;margin:auto;position:relative;z-index:99998"><iframe data-aa="2448508" src="//acceptable.a-ads.com/2448508/?size=Adaptive" style="border:0;padding:0;width:70%;height:auto;overflow:hidden;display:block;margin:auto" loading="lazy"></iframe></div><div id="contenedor-requisitos" class="seccion-requisitos" style="display:none"></div></div><script>const urlParams = new URLSearchParams(window.location.search);
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="preconnect" href="https://api.npoint.io" crossorigin><link rel="preconnect" href="https://acceptable.a-ads.com" crossorigin><link rel="stylesheet" href="style.css"><title>Preparando Descarga</title></head><body><div class="caja-descarga"><img id="imagen-producto" class="img-producto" src="" alt="Icono" style="display:none" decoding="async" fetchpriority="high"><h1 id="titulo-producto">Cargando...</h1><p>Tu archivo se está procesando de manera segura.</p><div id="contenedor-enlace" style="margin:40px auto;min-height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center"><span class="contador-texto" id="texto-estado">Preparando la descarga...</span></div><div style="width:100%;margin:auto;text-align:center"><iframe data-aa="2448508" src="//acceptable.a-ads.com/2448508/?size=Adaptive" style="border:0;padding:0;width:70%;min-height:90px;overflow:hidden;display:block;margin:auto"></iframe></div><div id="contenedor-requisitos" class="seccion-requisitos" style="display:none"></div></div><script>const urlParams = new URLSearchParams(window.location.search);
     const identificador = urlParams.get('id');
     const imagenUrl = urlParams.get('img');
     const imgElement = document.getElementById('imagen-producto');
@@ -32,7 +32,7 @@
 
     let enlaceReal = null;
     let errorCarga = false;
-    let segundosRestantes = 6;
+    let segundosRestantes = 5;
     const URL_EXTERNA = 'https://api.npoint.io/e2c57e70d5b98a3e2f7f';
 
     // 3. Búsqueda anticipada del enlace en segundo plano desde la API

@@ -27,7 +27,6 @@ if (identificador) {
                 const requisitosHtml = datos[identificador];
                 contenedorRequisitos.innerHTML = '<h3>Requisitos Mínimos:</h3>' + requisitosHtml;
                 contenedorRequisitos.style.display = 'block'; 
-                if (requisitosHtml.length > 150) contenedorRequisitos.classList.add('requisitos-largos');
             }
         })
         .catch(err => console.error("Error al cargar requisitos:", err));

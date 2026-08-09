@@ -1,90 +1,91 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="preconnect" href="https://api.npoint.io" crossorigin><link rel="preconnect" href="https://acceptable.a-ads.com" crossorigin><link rel="stylesheet" href="style.css"><title>Preparando Descarga</title></head><body><div class="caja-descarga"><img id="imagen-producto" class="img-producto" src="" alt="Icono" style="display:none" decoding="async" fetchpriority="high"><h1 id="titulo-producto">Cargando...</h1><p>Tu archivo se está procesando de manera segura.</p><div id="contenedor-enlace" style="margin:40px auto;min-height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center"><span class="contador-texto" id="texto-estado">Preparando la descarga...</span></div><div style="width:100%;margin:auto;text-align:center"><iframe data-aa="2448508" src="//acceptable.a-ads.com/2448508/?size=Adaptive" style="border:0;padding:0;width:70%;min-height:90px;overflow:hidden;display:block;margin:auto"></iframe></div><div id="contenedor-requisitos" class="seccion-requisitos" style="display:none"></div></div><script>const urlParams = new URLSearchParams(window.location.search);
-    const identificador = urlParams.get('id');
-    const imagenUrl = urlParams.get('img');
-    const imgElement = document.getElementById('imagen-producto');
-    const tituloElement = document.getElementById('titulo-producto');
-    const contenedorRequisitos = document.getElementById('contenedor-requisitos');
-    const contenedorEnlace = document.getElementById('contenedor-enlace');
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="preconnect" href="https://api.npoint.io" crossorigin><link rel="preconnect" href="https://acceptable.a-ads.com" crossorigin><link rel="stylesheet" href="style.css"><title>Preparando Descarga</title></head><body><div class="container"><div class="caja-descarga"><img id="imagen-producto" class="img-producto" src="" alt="Icono" style="display:none" decoding="async" fetchpriority="high"><h1 id="titulo-producto">Cargando...</h1><p class="texto-info">Tu archivo se está procesando de manera segura.</p><div id="contenedor-enlace" class="contenedor-enlace"><span class="contador-texto" id="texto-estado">Preparando la descarga...</span></div><div class="contenedor-ads"><iframe data-aa="2448508" src="//acceptable.a-ads.com/2448508/?size=Adaptive" style="border:0;padding:0;width:100%;min-height:90px;overflow:hidden;display:block;margin:auto"></iframe></div><div id="contenedor-requisitos" class="seccion-requisitos" style="display:none"></div></div></div><script>function obtenerParametro(nombre) {
+    nombre = nombre.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+    var regex = new RegExp("[\\?&]" + nombre + "=([^&#]*)"),
+        resultados = regex.exec(window.location.search);
+    return resultados === null ? null : decodeURIComponent(resultados[1].replace(/\+/g, " "));
+}
+const identificador = obtenerParametro('id');
+const imagenUrl = obtenerParametro('img');
+const imgElement = document.getElementById('imagen-producto');
+const tituloElement = document.getElementById('titulo-producto');
+const contenedorRequisitos = document.getElementById('contenedor-requisitos');
+const contenedorEnlace = document.getElementById('contenedor-enlace');
 
-    // 1. Mostrar la imagen del producto recibida por URL
-    if (imagenUrl && imgElement) {
-        imgElement.src = decodeURIComponent(imagenUrl);
-        imgElement.style.display = 'block'; 
-    }
+if (imagenUrl && imgElement) {
+    imgElement.src = decodeURIComponent(imagenUrl);
+    imgElement.style.display = 'block'; 
+}
 
-    // 2. Cargar título y consultar requisitos.json
-    if (identificador) {
-        tituloElement.textContent = identificador;
-        document.title = "Descargando: " + identificador; 
-        
-        fetch('requisitos.json')
-            .then(res => res.ok ? res.json() : Promise.reject())
-            .then(datos => {
-                if (datos && datos[identificador] && contenedorRequisitos) {
-                    const requisitosHtml = datos[identificador];
-                    contenedorRequisitos.innerHTML = '<h3>Requisitos Mínimos:</h3>' + requisitosHtml;
-                    contenedorRequisitos.style.display = 'block'; 
-                    if (requisitosHtml.length > 150) contenedorRequisitos.classList.add('requisitos-largos');
-                }
-            })
-            .catch(err => console.error("Error al cargar requisitos:", err));
-    }
-
-    let enlaceReal = null;
-    let errorCarga = false;
-    let segundosRestantes = 5;
-    const URL_EXTERNA = 'https://api.npoint.io/e2c57e70d5b98a3e2f7f';
-
-    // 3. Búsqueda anticipada del enlace en segundo plano desde la API
-    const peticionEnlace = fetch(URL_EXTERNA)
-      .then(res => res.ok ? res.json() : Promise.reject("Error de red"))
-      .then(datos => {
-        enlaceReal = datos[identificador] || null;
-        if (!enlaceReal) errorCarga = true;
-      })
-      .catch(() => {
-        errorCarga = true;
-      });
-
-    // 4. Contador regresivo optimizado de 5 segundos
-    const cuentaRegresiva = setInterval(() => {
-      segundosRestantes--;
-      if (contenedorEnlace) { 
-        if (segundosRestantes > 0) {
-           contenedorEnlace.innerHTML = `<span class="contador-texto">Tu enlace estará listo en ${segundosRestantes} segundos...</span>`;
-        } else {
-          clearInterval(cuentaRegresiva);
-          // Nos aseguramos de que la petición haya terminado antes de renderizar el botón
-          peticionEnlace.finally(() => {
-              mostrarBotonOptimizado();
-          });
-        }
-      }
-    }, 1000);
-
-   function mostrarBotonOptimizado() {
-        if (!contenedorEnlace) return;
-        
-        if (enlaceReal) {
-            const urlLower = enlaceReal.toLowerCase();
-            let contenidoBoton = 'Ir al sitio oficial';
-            let claseColor = 'btn-otro'; // Rojo por defecto
-
-            // Detección automática del servidor para asignar imagen y color correspondiente
-            if (urlLower.includes('mediafire.com')) {
-                contenidoBoton = `Descargar en <img src="img/mediafire.webp" alt="MediaFire" class="icon-servidor" onerror="this.outerHTML='<b style=\\'margin-left:4px;\\'>MediaFire</b>'">`;
-                claseColor = 'btn-mediafire'; // Azul optimizado
-            } else if (urlLower.includes('drive.google.com') || urlLower.includes('docs.google.com')) {
-                contenidoBoton = `Descargar en <img src="img/google driver.webp" alt="Google Drive" class="icon-servidor" onerror="this.outerHTML='<b style=\\'margin-left:4px;\\'>Google Drive</b>'">`;
-                claseColor = 'btn-gdrive'; // Verde optimizado
+if (identificador) {
+    tituloElement.textContent = identificador;
+    document.title = "Descargando: " + identificador; 
+    
+    fetch('requisitos.json')
+        .then(res => res.ok ? res.json() : Promise.reject())
+        .then(datos => {
+            if (datos && datos[identificador] && contenedorRequisitos) {
+                const requisitosHtml = datos[identificador];
+                contenedorRequisitos.innerHTML = '<h3>Requisitos Mínimos:</h3>' + requisitosHtml;
+                contenedorRequisitos.style.display = 'block'; 
+                if (requisitosHtml.length > 150) contenedorRequisitos.classList.add('requisitos-largos');
             }
+        })
+        .catch(err => console.error("Error al cargar requisitos:", err));
+}
 
-            // Renderizado final del botón con sus clases corporativas y sin sombras pesadas
-            contenedorEnlace.innerHTML = `<a href="${enlaceReal}" class="btn-obtener ${claseColor}" rel="nofollow noopener noreferrer" target="_blank">${contenidoBoton}</a>`;
-        } else if (errorCarga) {
-            contenedorEnlace.innerHTML = '<span style="color:#ff3333; font-weight:bold;">Error: El enlace no se pudo cargar o no existe.</span>';
+let enlaceReal = null;
+let errorCarga = false;
+let segundosRestantes = 5;
+const URL_EXTERNA = 'https://api.npoint.io/e2c57e70d5b98a3e2f7f';
+
+const peticionEnlace = fetch(URL_EXTERNA)
+  .then(res => res.ok ? res.json() : Promise.reject("Error de red"))
+  .then(datos => {
+    enlaceReal = datos[identificador] || null;
+    if (!enlaceReal) errorCarga = true;
+  })
+  .catch(() => {
+    errorCarga = true;
+  });
+
+const cuentaRegresiva = setInterval(() => {
+  segundosRestantes--;
+  if (contenedorEnlace) { 
+    if (segundosRestantes > 0) {
+       contenedorEnlace.innerHTML = `<span class="contador-texto">Tu enlace estará listo en ${segundosRestantes} segundos...</span>`;
+    } else {
+      clearInterval(cuentaRegresiva);
+      peticionEnlace
+        .then(mostrarBotonOptimizado)
+        .catch(mostrarBotonOptimizado);
+    }
+  }
+}, 1000);
+
+function mostrarBotonOptimizado() {
+    if (!contenedorEnlace) return;
+    
+    if (enlaceReal) {
+        const urlLower = enlaceReal.toLowerCase();
+        let contenidoBoton = 'Ir al sitio oficial';
+        let claseColor = 'btn-obtener'; 
+
+        if (urlLower.includes('mediafire.com')) {
+            contenidoBoton = `Descargar en <img src="img/mediafire.webp" alt="MediaFire" class="icon-servidor" onerror="this.outerHTML='<b style=\\'margin-left:4px;\\'>MediaFire</b>'">`;
+            claseColor = 'btn-obtener'; // Azul por defecto
+        } else if (urlLower.includes('drive.google.com') || urlLower.includes('docs.google.com')) {
+            contenidoBoton = `Descargar en <img src="img/google driver.webp" alt="Google Drive" class="icon-servidor" onerror="this.outerHTML='<b style=\\'margin-left:4px;\\'>Google Drive</b>'">`;
+            claseColor = 'btn-obtener google'; // Verde
         } else {
-            contenedorEnlace.innerHTML = '<span class="contador-texto" style="color:#ffcc00;">Buscando enlace...</span>';
-            setTimeout(mostrarBotonOptimizado, 200);
+            contenidoBoton = 'Ir al sitio oficial';
+            claseColor = 'btn-obtener rojo'; 
         }
-    }</script></body></html>
+
+        contenedorEnlace.innerHTML = `<a href="${enlaceReal}" class="${claseColor}" rel="nofollow noopener noreferrer" target="_blank">${contenidoBoton}</a>`;
+    } else if (errorCarga) {
+        contenedorEnlace.innerHTML = '<span style="color:#ff3333; font-weight:bold;">Error: El enlace no se pudo cargar.</span>';
+    } else {
+        contenedorEnlace.innerHTML = '<span class="contador-texto" style="color:#ffcc00;">Buscando enlace...</span>';
+        setTimeout(mostrarBotonOptimizado, 200);
+    }
+}</script></body>

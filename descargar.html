@@ -1,4 +1,74 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="preconnect" href="https://api.npoint.io" crossorigin><link rel="preconnect" href="https://acceptable.a-ads.com" crossorigin><link rel="stylesheet" href="style.css"><title>Preparando Descarga</title></head><body style="padding-top:0"><div class="container" style="padding-top:0"><div class="caja-descarga"><img id="imagen-producto" class="img-producto" src="" alt="Icono" style="display:none" decoding="async" fetchpriority="high"><h1 id="titulo-producto">Cargando...</h1><p class="texto-info">Tu archivo se está procesando de manera segura.</p><div id="contenedor-enlace" class="contenedor-enlace"><span class="contador-texto" id="texto-estado">Preparando la descarga...</span></div><div class="contenedor-ads" style="background:#121212;border-radius:8px;overflow:hidden;margin:15px auto;padding:6px;text-align:center"><iframe data-aa="2448508" src="//acceptable.a-ads.com/2448508/?size=Adaptive" style="border:0;padding:0;width:100%;min-height:90px;height:auto;overflow:hidden;display:block;margin:auto;background:0 0"></iframe></div><div id="contenedor-requisitos" class="seccion-requisitos" style="display:none"></div></div></div><script>function obtenerParametro(nombre) {
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://api.npoint.io" crossorigin>
+  <link rel="preconnect" href="https://acceptable.a-ads.com" crossorigin>
+  <link rel="stylesheet" href="style.css">
+  <title>Preparando Descarga</title>
+</head>
+<body style="padding-top: 0;">
+<div class="container" style="padding-top: 0;">
+    <div class="caja-descarga">
+	  <!-- Imagen centrada -->
+        <img id="imagen-producto" 
+             class="img-producto" 
+             src="" 
+             alt="Icono" 
+             style="display: none;" 
+             decoding="async" 
+             fetchpriority="high">
+             
+        <!-- Título arriba, igual que en la grilla -->
+        <h1 id="titulo-producto">Cargando...</h1>
+        
+        <p class="texto-info">Tu archivo se está procesando de manera segura.</p>
+        
+        <!-- Contenedor del botón o contador -->
+        <div id="contenedor-enlace" class="contenedor-enlace">
+            <span class="contador-texto" id="texto-estado">Preparando la descarga...</span>
+        </div>
+        
+        <!-- ================================================= -->
+        <!-- SISTEMA DE PUBLICIDAD ADAPTATIVA / CHROME 49     -->
+        <!-- ================================================= -->
+        
+        <!-- Banner Normal (Para Supermium, Mypal y navegadores modernos) -->
+        <div id="banner-normal" class="contenedor-ads" style="display: none; background: #121212; border-radius: 8px; overflow: hidden; margin: 15px auto; padding: 6px; text-align: center;">
+            <iframe data-aa='2448508' src='//acceptable.a-ads.com/2448508/?size=Adaptive' style='border:0; padding:0; width:100%; min-height:90px; height:auto; overflow:hidden; display: block; margin: auto; background: transparent;'></iframe>
+        </div>
+
+        <!-- Banner Estático / Texto (Exclusivo para Chrome 49 / PC muy viejas) -->
+        <div id="banner-chrome49" style="display: none; background: #121212; border-radius: 8px; overflow: hidden; margin: 15px auto; padding: 12px; text-align: center; border: 1px solid #222;">
+            <a href="https://a-ads.com/2448508" target="_blank" rel="nofollow noopener" style="display: flex; align-items: center; justify-content: center; color: #cccccc; text-decoration: none; font-size: 0.9rem;">
+                <img src="img/icon.webp" alt="Pobrecraft" style="width: 28px; height: 28px; object-fit: contain; margin-right: 10px;">
+                <span>Publicidad compatible (Modo liviano Chrome 49)</span>
+            </a>
+        </div>
+
+        <!-- Requisitos del sistema -->
+        <div id="contenedor-requisitos" class="seccion-requisitos" style="display: none;"></div>
+    </div>
+</div>
+
+<script>
+// Detección automática de Chrome 49 al cargar la página
+document.addEventListener("DOMContentLoaded", function() {
+    const esChrome49 = /Chrome\/49\./.test(navigator.userAgent);
+    const bannerNormal = document.getElementById('banner-normal');
+    const bannerChrome49 = document.getElementById('banner-chrome49');
+
+    if (esChrome49) {
+        if (bannerChrome49) bannerChrome49.style.display = 'block';
+        if (bannerNormal) bannerNormal.style.display = 'none';
+    } else {
+        if (bannerNormal) bannerNormal.style.display = 'block';
+        if (bannerChrome49) bannerChrome49.style.display = 'none';
+    }
+});
+
+function obtenerParametro(nombre) {
     nombre = nombre.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
     var regex = new RegExp("[\\?&]" + nombre + "=([^&#]*)"),
         resultados = regex.exec(window.location.search);
@@ -71,10 +141,10 @@ function mostrarBotonOptimizado() {
 
         if (urlLower.includes('mediafire.com')) {
             contenidoBoton = `Descargar en <img src="img/mediafire.webp" alt="MediaFire" class="icon-servidor" onerror="this.outerHTML='<b style=\\'margin-left:4px;\\'>MediaFire</b>'">`;
-            claseColor = 'btn-obtener'; // Azul por defecto
+            claseColor = 'btn-obtener'; 
         } else if (urlLower.includes('drive.google.com') || urlLower.includes('docs.google.com')) {
             contenidoBoton = `Descargar en <img src="img/google driver.webp" alt="Google Drive" class="icon-servidor" onerror="this.outerHTML='<b style=\\'margin-left:4px;\\'>Google Drive</b>'">`;
-            claseColor = 'btn-obtener google'; // Verde
+            claseColor = 'btn-obtener google'; 
         } else {
             contenidoBoton = 'Ir al sitio oficial';
             claseColor = 'btn-obtener rojo'; 
@@ -87,4 +157,7 @@ function mostrarBotonOptimizado() {
         contenedorEnlace.innerHTML = '<span class="contador-texto" style="color:#ffcc00;">Buscando enlace...</span>';
         setTimeout(mostrarBotonOptimizado, 200);
     }
-}</script></body>
+}
+</script>
+</body>
+</html>

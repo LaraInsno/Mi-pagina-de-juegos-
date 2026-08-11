@@ -96,7 +96,7 @@ if (identificador) {
 let enlaceReal = null;
 let errorCarga = false;
 let segundosRestantes = 5;
-const URL_EXTERNA = 'https://api.npoint.io/e2c57e70d5b98a3e2f7f';
+const URL_EXTERNA = 'https://api.npoint.io/705d011c0a183a87ee87';
 
 const peticionEnlace = fetch(URL_EXTERNA)
   .then(res => res.ok ? res.json() : Promise.reject("Error de red"))
@@ -143,7 +143,7 @@ function mostrarBotonOptimizado() {
 
         contenedorEnlace.innerHTML = `<a href="${enlaceReal}" class="${claseColor}" rel="nofollow noopener noreferrer" target="_blank">${contenidoBoton}</a>`;
     } else if (errorCarga) {
-        contenedorEnlace.innerHTML = '<span style="color:#ff3333; font-weight:bold;">Error: El enlace no se pudo cargar.</span>';
+        contenedorEnlace.innerHTML = '<span style="color:#ff3333; font-weight:bold;">Error: El enlace no existe o no estas conectado a internet.</span>';
     } else {
         contenedorEnlace.innerHTML = '<span class="contador-texto" style="color:#ffcc00;">Buscando enlace...</span>';
         setTimeout(mostrarBotonOptimizado, 200);

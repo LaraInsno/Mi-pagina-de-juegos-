@@ -1,46 +1,4 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="preconnect" href="https://api.npoint.io" crossorigin>
-  <link rel="preconnect" href="https://acceptable.a-ads.com" crossorigin>
-  <link rel="stylesheet" href="style.css">
-  <title>Preparando Descarga</title>
-</head>
-<body style="padding-top: 0;">
-<div class="container" style="padding-top: 0;">
-    <div class="caja-descarga">
-	  <!-- Imagen centrada -->
-        <img id="imagen-producto" 
-             class="img-producto" 
-             src="" 
-             alt="Icono" 
-             style="display: none;" 
-             decoding="async" 
-             fetchpriority="high">
-             
-        <!-- Título arriba, igual que en la grilla -->
-        <h1 id="titulo-producto">Cargando...</h1>
-        
-        <p class="texto-info">Tu archivo se está procesando de manera segura.</p>
-        
-        <!-- Contenedor del botón o contador -->
-        <div id="contenedor-enlace" class="contenedor-enlace">
-            <span class="contador-texto" id="texto-estado">Preparando la descarga...</span>
-        </div>
-
-      
-<div id="contenedor-publicidad" style="background: #121212; border-radius: 8px; overflow: hidden; margin: 20px auto; padding: 12px; text-align: center; width: 95%; max-width: 440px;">
-</div>
-
-        <!-- Requisitos del sistema -->
-        <div id="contenedor-requisitos" class="seccion-requisitos" style="display: none;"></div>
-    </div>
-</div>
-
-<script>
-document.addEventListener("DOMContentLoaded", function() {
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="preconnect" href="https://api.npoint.io" crossorigin><link rel="preconnect" href="https://acceptable.a-ads.com" crossorigin><link rel="stylesheet" href="style.css"><title>Preparando Descarga</title></head><body style="padding-top:0"><div class="container" style="padding-top:0"><div class="caja-descarga"><img id="imagen-producto" class="img-producto" src="" alt="Icono" style="display:none" decoding="async" fetchpriority="high"><h1 id="titulo-producto">Cargando...</h1><p class="texto-info">Tu archivo se está procesando de manera segura.</p><div id="contenedor-enlace" class="contenedor-enlace"><span class="contador-texto" id="texto-estado">Preparando la descarga...</span></div><div id="contenedor-publicidad" style="background:#121212;border-radius:8px;overflow:hidden;margin:20px auto;padding:12px;text-align:center;width:95%;max-width:440px"></div><div id="contenedor-requisitos" class="seccion-requisitos" style="display:none"></div></div></div><script>document.addEventListener("DOMContentLoaded", function() {
     const esChrome49 = /Chrome\/49\./.test(navigator.userAgent);
     const contenedorPubli = document.getElementById('contenedor-publicidad');
 
@@ -96,7 +54,7 @@ if (identificador) {
 let enlaceReal = null;
 let errorCarga = false;
 let segundosRestantes = 5;
-const URL_EXTERNA = 'https://api.npoint.io/705d011c0a183a87ee87';
+const URL_EXTERNA = 'https://api.npoint.io/9a5fd87fba9afa240fa2';
 
 const peticionEnlace = fetch(URL_EXTERNA)
   .then(res => res.ok ? res.json() : Promise.reject("Error de red"))
@@ -148,7 +106,4 @@ function mostrarBotonOptimizado() {
         contenedorEnlace.innerHTML = '<span class="contador-texto" style="color:#ffcc00;">Buscando enlace...</span>';
         setTimeout(mostrarBotonOptimizado, 200);
     }
-}
-</script>
-</body>
-</html>
+}</script></body></html>

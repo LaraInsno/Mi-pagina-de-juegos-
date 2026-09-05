@@ -1,100 +1,107 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="preconnect" href="https://api.npoint.io" crossorigin><link rel="preconnect" href="https://acceptable.a-ads.com" crossorigin><link rel="stylesheet" href="style.css"><title>Preparando Descarga</title></head><body style="padding-top:0"><div class="container" style="padding-top:0"><div class="caja-descarga"><img id="imagen-producto" class="img-producto" src="" alt="Icono" style="display:none" decoding="async" fetchpriority="high"><h1 id="titulo-producto">Cargando...</h1><p class="texto-info">Tu archivo se está procesando de manera segura.</p><div id="contenedor-enlace" class="contenedor-enlace"><span class="contador-texto" id="texto-estado">Preparando la descarga...</span></div><div id="contenedor-publicidad"></div><div id="contenedor-requisitos" class="seccion-requisitos" style="display:none"></div></div></div><script>document.addEventListener("DOMContentLoaded", function() {
-    const contenedorPubli = document.getElementById('contenedor-publicidad');
-
-    if (contenedorPubli) {
-        // Inyecta únicamente el bloque normal (Ad Unit 2448508)
-        contenedorPubli.innerHTML = `
-            <iframe data-aa='2448508' src='//acceptable.a-ads.com/2448508/?size=Adaptive' style='border:0; padding:0; width:100%; min-height:90px; height:auto; overflow:hidden; display: block; margin: auto; background: transparent;'></iframe>`;
-    }
-});
-
-function obtenerParametro(nombre) {
-    nombre = nombre.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
-    var regex = new RegExp("[\\?&]" + nombre + "=([^&#]*)"),
-        resultados = regex.exec(window.location.search);
-    return resultados === null ? null : decodeURIComponent(resultados[1].replace(/\+/g, " "));
-}
-const identificador = obtenerParametro('id');
-const imagenUrl = obtenerParametro('img');
-const imgElement = document.getElementById('imagen-producto');
-const tituloElement = document.getElementById('titulo-producto');
-const contenedorRequisitos = document.getElementById('contenedor-requisitos');
-const contenedorEnlace = document.getElementById('contenedor-enlace');
-
-if (imagenUrl && imgElement) {
-    imgElement.src = decodeURIComponent(imagenUrl);
-    imgElement.style.display = 'block'; 
-}
-
-if (identificador) {
-    tituloElement.textContent = identificador;
-    document.title = "Descargando: " + identificador; 
-    
-    fetch('requisitos.json')
-        .then(res => res.ok ? res.json() : Promise.reject())
-        .then(datos => {
-            if (datos && datos[identificador] && contenedorRequisitos) {
-                const requisitosHtml = datos[identificador];
-                contenedorRequisitos.innerHTML = '<h3>Requisitos Mínimos:</h3>' + requisitosHtml;
-                contenedorRequisitos.style.display = 'block'; 
-            }
-        })
-        .catch(err => console.error("Error al cargar requisitos:", err));
-}
-
-let enlaceReal = null;
-let errorCarga = false;
-let segundosRestantes = 5;
-const URL_EXTERNA = 'https://api.npoint.io/03f685fdf6cee3af6519';
-
-const peticionEnlace = fetch(URL_EXTERNA)
-  .then(res => res.ok ? res.json() : Promise.reject("Error de red"))
-  .then(datos => {
-    enlaceReal = datos[identificador] || null;
-    if (!enlaceReal) errorCarga = true;
-  })
-  .catch(() => {
-    errorCarga = true;
-  });
-
-const cuentaRegresiva = setInterval(() => {
-  segundosRestantes--;
-  if (contenedorEnlace) { 
-    if (segundosRestantes > 0) {
-       contenedorEnlace.innerHTML = `<span class="contador-texto">Tu enlace estará listo en ${segundosRestantes} segundos...</span>`;
-    } else {
-      clearInterval(cuentaRegresiva);
-      peticionEnlace
-        .then(mostrarBotonOptimizado)
-        .catch(mostrarBotonOptimizado);
-    }
-  }
-}, 1000);
-
-function mostrarBotonOptimizado() {
-    if (!contenedorEnlace) return;
-    
-    if (enlaceReal) {
-        const urlLower = enlaceReal.toLowerCase();
-        let contenidoBoton = 'Ir al sitio oficial';
-        let claseColor = 'btn-obtener'; 
-
-        if (urlLower.includes('mediafire.com')) {
-            contenidoBoton = `Descargar en <img src="img/mediafire.webp" alt="MediaFire" class="icon-servidor" onerror="this.outerHTML='<b style=\\'margin-left:4px;\\'>MediaFire</b>'">`;
-            claseColor = 'btn-obtener'; 
-        } else if (urlLower.includes('drive.google.com') || urlLower.includes('docs.google.com')) {
-            contenidoBoton = `Descargar en <img src="img/google driver.webp" alt="Google Drive" class="icon-servidor" onerror="this.outerHTML='<b style=\\'margin-left:4px;\\'>Google Drive</b>'">`;
-            claseColor = 'btn-obtener google'; 
-        } else {
-            contenidoBoton = 'Ir al sitio oficial';
-            claseColor = 'btn-obtener rojo'; 
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="preconnect" href="https://api.npoint.io" crossorigin><link rel="preconnect" href="https://acceptable.a-ads.com" crossorigin><link rel="stylesheet" href="style.css"><title>Preparando Descarga</title></head><body style="padding-top:0;padding-bottom:70px"><div class="container" style="padding-top:0"><div class="caja-descarga"><img id="imagen-producto" class="img-producto" src="" alt="Icono" style="display:none" decoding="async" fetchpriority="high"><h1 id="titulo-producto">Cargando...</h1><p class="texto-info">Tu archivo se está procesando de manera segura.</p><div id="contenedor-enlace" class="contenedor-enlace"><span class="contador-texto" id="texto-estado">Preparando la descarga...</span></div><div id="contenedor-publicidad"></div><div id="contenedor-requisitos" class="seccion-requisitos" style="display:none"></div></div></div><div id="contenedor-publicidad-abajo" class="banner-pegado-abajo"></div><script>document.addEventListener("DOMContentLoaded", function() {
+        // 1. Anuncio dentro de la caja (2448508)
+        const contenedorPubli = document.getElementById('contenedor-publicidad');
+        if (contenedorPubli) {
+            contenedorPubli.innerHTML = `
+                <iframe data-aa='2448508' src='//acceptable.a-ads.com/2448508/?size=Adaptive' style='border:0; padding:0; width:100%; min-height:90px; height:auto; overflow:hidden; display: block; margin: auto; background: transparent;'></iframe>`;
         }
 
-        contenedorEnlace.innerHTML = `<a href="${enlaceReal}" class="${claseColor}" rel="nofollow noopener noreferrer" target="_blank">${contenidoBoton}</a>`;
-    } else if (errorCarga) {
-        contenedorEnlace.innerHTML = '<span style="color:#ff3333; font-weight:bold;">Error: El enlace no existe o no estas conectado a internet.</span>';
-    } else {
-        contenedorEnlace.innerHTML = '<span class="contador-texto" style="color:#ffcc00;">Buscando enlace...</span>';
-        setTimeout(mostrarBotonOptimizado, 200);
+        // 2. Anuncio inferior fijo (2454282) - Altura estrictamente limitada a 50px
+        const contenedorPubliAbajo = document.getElementById('contenedor-publicidad-abajo');
+        if (contenedorPubliAbajo) {
+            contenedorPubliAbajo.innerHTML = `
+                <iframe data-aa='2454282' src='//acceptable.a-ads.com/2454282/?size=Adaptive' style='border:0; padding:0; width:100%; height:50px; max-height:50px; overflow:hidden; display: block; margin: auto; background: transparent;'></iframe>`;
+        }
+    });
+
+    // Resto de tus funciones (obtenerParametro, temporizador, etc.)...
+    function obtenerParametro(nombre) {
+        nombre = nombre.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+        var regex = new RegExp("[\\?&]" + nombre + "=([^&#]*)"),
+            resultados = regex.exec(window.location.search);
+        return resultados === null ? null : decodeURIComponent(resultados[1].replace(/\+/g, " "));
     }
-}</script></body></html>
+    const identificador = obtenerParametro('id');
+    const imagenUrl = obtenerParametro('img');
+    const imgElement = document.getElementById('imagen-producto');
+    const tituloElement = document.getElementById('titulo-producto');
+    const contenedorRequisitos = document.getElementById('contenedor-requisitos');
+    const contenedorEnlace = document.getElementById('contenedor-enlace');
+
+    if (imagenUrl && imgElement) {
+        imgElement.src = decodeURIComponent(imagenUrl);
+        imgElement.style.display = 'block'; 
+    }
+
+    if (identificador) {
+        tituloElement.textContent = identificador;
+        document.title = "Descargando: " + identificador; 
+        
+        fetch('requisitos.json')
+            .then(res => res.ok ? res.json() : Promise.reject())
+            .then(datos => {
+                if (datos && datos[identificador] && contenedorRequisitos) {
+                    const requisitosHtml = datos[identificador];
+                    contenedorRequisitos.innerHTML = '<h3>Requisitos Mínimos:</h3>' + requisitosHtml;
+                    contenedorRequisitos.style.display = 'block'; 
+                }
+            })
+            .catch(err => console.error("Error al cargar requisitos:", err));
+    }
+
+    let enlaceReal = null;
+    let errorCarga = false;
+    let segundosRestantes = 5;
+    const URL_EXTERNA = 'https://api.npoint.io/03f685fdf6cee3af6519';
+
+    const peticionEnlace = fetch(URL_EXTERNA)
+      .then(res => res.ok ? res.json() : Promise.reject("Error de red"))
+      .then(datos => {
+        enlaceReal = datos[identificador] || null;
+        if (!enlaceReal) errorCarga = true;
+      })
+      .catch(() => {
+        errorCarga = true;
+      });
+
+    const cuentaRegresiva = setInterval(() => {
+      segundosRestantes--;
+      if (contenedorEnlace) { 
+        if (segundosRestantes > 0) {
+           contenedorEnlace.innerHTML = `<span class="contador-texto">Tu enlace estará listo en ${segundosRestantes} segundos...</span>`;
+        } else {
+          clearInterval(cuentaRegresiva);
+          peticionEnlace
+            .then(mostrarBotonOptimizado)
+            .catch(mostrarBotonOptimizado);
+        }
+      }
+    }, 1000);
+
+    function mostrarBotonOptimizado() {
+        if (!contenedorEnlace) return;
+        
+        if (enlaceReal) {
+            const urlLower = enlaceReal.toLowerCase();
+            let contenidoBoton = 'Ir al sitio oficial';
+            let claseColor = 'btn-obtener'; 
+
+            if (urlLower.includes('mediafire.com')) {
+                contenidoBoton = `Descargar en <img src="img/mediafire.webp" alt="MediaFire" class="icon-servidor" onerror="this.outerHTML='<b style=\\'margin-left:4px;\\'>MediaFire</b>'">`;
+                claseColor = 'btn-obtener'; 
+            } else if (urlLower.includes('drive.google.com') || urlLower.includes('docs.google.com')) {
+                contenidoBoton = `Descargar en <img src="img/google driver.webp" alt="Google Drive" class="icon-servidor" onerror="this.outerHTML='<b style=\\'margin-left:4px;\\'>Google Drive</b>'">`;
+                claseColor = 'btn-obtener google'; 
+            } else {
+                contenidoBoton = 'Ir al sitio oficial';
+                claseColor = 'btn-obtener rojo'; 
+            }
+
+            contenedorEnlace.innerHTML = `<a href="${enlaceReal}" class="${claseColor}" rel="nofollow noopener noreferrer" target="_blank">${contenidoBoton}</a>`;
+        } else if (errorCarga) {
+            contenedorEnlace.innerHTML = '<span style="color:#ff3333; font-weight:bold;">Error: El enlace no existe o no estas conectado a internet.</span>';
+        } else {
+            contenedorEnlace.innerHTML = '<span class="contador-texto" style="color:#ffcc00;">Buscando enlace...</span>';
+            setTimeout(mostrarBotonOptimizado, 200);
+        }
+    }</script></body></html>

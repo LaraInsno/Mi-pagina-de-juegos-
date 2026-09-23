@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://pobrecraft.qzz.io/sitemap.xml

@@ -33,18 +33,19 @@ function cargarAnuncioFijo() {
 function cerrarAnuncio() {
     anuncioCerrado = true;
     const anuncioFijo = document.getElementById("modal-publicidad");
-    if (anuncioFijo) anuncioFijo.style.display = "none";
+    if (anuncioFijo) {
+        // ✅ setProperty con "important" vence al !important del CSS
+        anuncioFijo.style.setProperty("display", "none", "important");
+    }
     const frame = document.getElementById("frame");
     if (frame) frame.innerHTML = "";
 
-    // ✅ Eliminar cualquier elemento inyectado por HillTopAds directamente en el body
+    // Eliminar elementos inyectados por HillTopAds
     const sospechosos = document.querySelectorAll('body > div, body > iframe, body > ins');
     sospechosos.forEach(el => {
         if (el.id === "modal-publicidad" || el.closest("#modal-publicidad")) return;
         const z = parseInt(window.getComputedStyle(el).zIndex, 10) || 0;
-        if (z > 50000) {
-            el.remove();
-        }
+        if (z > 50000) el.remove();
     });
 }
 

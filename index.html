@@ -151,7 +151,10 @@
     @media (max-width: 768px), (max-height: 600px) { .modal-header-horizontal .img-producto { width: 85px; height: 85px; } .modal-header-horizontal #modal-titulo { font-size: 1.8rem; } .modal-content.modal-ampliado { padding: 20px 15px; } .seccion-requisitos ul { grid-template-columns: 1fr 1fr; } }
     @media (max-width: 480px) { .seccion-requisitos ul { grid-template-columns: 1fr; } }
     body.modal-abierto .btn-subir, body.modal-abierto .paginacion-flotante { display: none !important; }
-	.contenedor-ads-fijo{position:fixed;bottom:0;left:0;width:100%;background:var(--bg-secondary);border-top:2px solid var(--red-dark);z-index:100000;text-align:center;height:70px;display:flex;justify-content:center;align-items:center;pointer-events:none}.contenedor-ads-fijo iframe,.ad-cerrar-btn{pointer-events:auto}.ad-cerrar-btn{position:absolute;top:-26px;left:50%;transform:translateX(-50%);background:var(--bg-secondary);border:1px solid var(--red-dark);border-bottom:none;border-radius:8px 8px 0 0;width:50px;height:26px;display:flex;justify-content:center;align-items:center;cursor:pointer;color:var(--text-light);z-index:100001}.ad-cerrar-btn:hover{background:var(--red-main);border-color:var(--red-main);color:#fff}
+.contenedor-ads-fijo{position:fixed!important;bottom:0!important;left:0!important;right:0!important;top:auto!important;width:100%!important;height:70px!important;max-height:70px!important;background:var(--bg-secondary)!important;border-top:2px solid var(--red-dark)!important;z-index:100000!important;text-align:center!important;display:flex!important;justify-content:center!important;align-items:center!important;pointer-events:none!important}
+	#frame{width:100%!important;height:65px!important;max-height:65px!important;overflow:hidden!important;display:flex!important;align-items:center!important;justify-content:center!important;position:relative!important}
+	.ad-cerrar-btn{position:absolute!important;top:-26px!important;left:50%!important;transform:translateX(-50%)!important;background:var(--bg-secondary)!important;border:1px solid var(--red-dark)!important;border-bottom:none!important;border-radius:8px 8px 0 0!important;width:50px!important;height:26px!important;display:flex!important;justify-content:center!important;align-items:center!important;cursor:pointer!important;color:var(--text-light)!important;z-index:100001!important;pointer-events:auto!important}
+.ad-cerrar-btn:hover{background:var(--red-main)!important;border-color:var(--red-main)!important;color:#fff!important}
     .comentarios-seccion { max-width: 600px; margin: 0 auto; text-align: left; }
     .comentario-formulario { display: flex; flex-direction: column; gap: 14px; background: var(--bg-secondary); border: 1px solid var(--red-dark); padding: 20px; border-radius: 14px; }
     .comentario-avatar-preview-wrap { display: flex; align-items: center; gap: 15px; }
@@ -636,11 +639,11 @@
 <!-- Contenedor del anuncio fijo (Ventana inferior) -->
 <div id="modal-publicidad" class="contenedor-ads-fijo" style="display: none;">
   <!-- Botón de la flecha para cerrar -->
-  <div class="ad-cerrar-btn" onclick="cerrarAnuncio()" title="Cerrar anuncio">
-     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="6 9 12 15 18 9"></polyline>
-     </svg>
-  </div>
+ <div class="ad-cerrar-btn" id="btn-cerrar-anuncio" title="Cerrar anuncio">
+   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;">
+      <polyline points="6 9 12 15 18 9"></polyline>
+   </svg>
+</div>
   
   <!-- Aquí se inyectará el anuncio de HillTopAds -->
   <div id="frame" style="width: 100%; margin: auto; position: relative; z-index: 99998; display: flex; align-items: center; justify-content: center; height: 65px;"></div>

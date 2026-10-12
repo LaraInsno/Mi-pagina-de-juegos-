@@ -1,21 +1,4 @@
-let cuentaRegresivaInterval;
-let timeoutMostrarBoton = null;
-let baseDatosEnlaces = null;
-const URL_EXTERNA = "https://api.npoint.io/3a3a2701bdffa5352a3b";
-
-// --- CONFIGURACIÓN DE HILLTOPADS ---
-let anuncioCargado = false;
-let anuncioCerrado = false;
-
-function cargarAnuncioFijo() {
-    if (anuncioCargado) return;
-    anuncioCargado = true;
-    const frame = document.getElementById("frame");
-    if (!frame) return;
-
-    // Inyectamos el código de HillTopAds que nos proporcionaste
-    const script = document.createElement("script");
-    script.textContent = `
+let cuentaRegresivaInterval;let timeoutMostrarBoton=null;let baseDatosEnlaces=null;const URL_EXTERNA="https://api.npoint.io/3a3a2701bdffa5352a3b";let anuncioCargado=!1;let anuncioCerrado=!1;function cargarAnuncioFijo(){if(anuncioCargado)return;anuncioCargado=!0;const frame=document.getElementById("frame");if(!frame)return;const script=document.createElement("script");script.textContent=`
         (function(rhjtov){
         var d = document,
             s = d.createElement('script'),
@@ -26,573 +9,56 @@ function cargarAnuncioFijo() {
         s.referrerPolicy = 'no-referrer-when-downgrade';
         l.parentNode.insertBefore(s, l);
         })({})
-    `;
-    frame.appendChild(script);
-}
-
-function cerrarAnuncio() {
-    anuncioCerrado = true;
-    const anuncioFijo = document.getElementById("modal-publicidad");
-    if (anuncioFijo) {
-        // ✅ setProperty con "important" vence al !important del CSS
-        anuncioFijo.style.setProperty("display", "none", "important");
-    }
-    const frame = document.getElementById("frame");
-    if (frame) frame.innerHTML = "";
-
-    // Eliminar elementos inyectados por HillTopAds
-    const sospechosos = document.querySelectorAll('body > div, body > iframe, body > ins');
-    sospechosos.forEach(el => {
-        if (el.id === "modal-publicidad" || el.closest("#modal-publicidad")) return;
-        const z = parseInt(window.getComputedStyle(el).zIndex, 10) || 0;
-        if (z > 50000) el.remove();
-    });
-}
-
-// Asignar el evento al botón de cerrar cuando el DOM esté listo
-document.addEventListener("DOMContentLoaded", () => {
-    const btnCerrar = document.getElementById("btn-cerrar-anuncio");
-    if (btnCerrar) {
-        btnCerrar.addEventListener("click", (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            cerrarAnuncio();
-        });
-    }
-});
-
-function irAlEnlace(identificador, imagen) {
-    const modal               = document.getElementById("modal-descarga");
-    const imgElement          = document.getElementById("modal-img");
-    const tituloElement       = document.getElementById("modal-titulo");
-    const contenedorEnlace    = document.getElementById("modal-enlace");
-    const contenedorRequisitos = document.getElementById("modal-requisitos");
-    const contenedorPubli     = document.getElementById("modal-publicidad");
-
-    modal.style.display = "flex";
-    modal.scrollTop = 0;
-    document.body.classList.add("modal-abierto");
-    tituloElement.textContent = identificador;
-
-    contenedorEnlace.innerHTML = '<span class="contador-texto" id="countdown-modal">Preparando la descarga...</span>';
-    const countdownEl = document.getElementById("countdown-modal");
-
-    contenedorRequisitos.style.display = "none";
-	
-
-    if (imagen) {
-        imgElement.src = imagen;
-        imgElement.style.display = "block";
-    } else {
-        imgElement.style.display = "none";
-    }
-
-    // ✅ Requisitos desde caché (ya no se vuelve a descargar el JSON)
-    cargarRequisitos().then((datos) => {
-        if (datos && datos[identificador]) {
-            contenedorRequisitos.innerHTML = "<h3>Requisitos Mínimos:</h3>" + datos[identificador];
-            contenedorRequisitos.style.display = "block";
-        }
-    });
-
-    let enlaceReal = null;
-    let errorCarga = false;
-    let segundosRestantes = 4;
-
-    if (baseDatosEnlaces) {
-        enlaceReal = baseDatosEnlaces[identificador] || null;
-        if (!enlaceReal) errorCarga = true;
-    } else {
-        fetch(URL_EXTERNA)
-            .then((res) => (res.ok ? res.json() : Promise.reject()))
-            .then((datos) => {
-                baseDatosEnlaces = datos;
-                enlaceReal = datos[identificador] || null;
-                if (!enlaceReal) errorCarga = true;
-            })
-            .catch(() => { errorCarga = true; });
-    }
-
-    // ✅ Un solo interval (antes había dos, uno de ellos con TDZ en segundosRestantes)
-    clearInterval(cuentaRegresivaInterval);
-    cuentaRegresivaInterval = setInterval(() => {
-        segundosRestantes--;
-        if (segundosRestantes > 0) {
-            if (countdownEl) {
-                countdownEl.textContent = `Tu enlace estará listo en ${segundosRestantes} segundos...`;
-            }
-        } else {
-            clearInterval(cuentaRegresivaInterval);
-            mostrarBoton();
-        }
-    }, 1000);
-
-    function mostrarBoton() {
-        if (enlaceReal) {
-            const urlLower = enlaceReal.toLowerCase();
-            let btnStr = "Ir al sitio oficial", clase = "btn-obtener rojo";
-            if (urlLower.includes("mediafire.com")) {
-                btnStr = `Descargar en <img src="img/mediafire.webp" alt="MediaFire" class="icon-servidor">`;
-                clase = "btn-obtener";
-            } else if (urlLower.includes("drive.google.com") || urlLower.includes("docs.google.com")) {
-                btnStr = `Descargar en <img src="img/google driver.webp" alt="Drive" class="icon-servidor">`;
-                clase = "btn-obtener google";
-            } else if (urlLower.includes("pixeldrain.com")) {
-                btnStr = `Descargar en <img src="img/pixeldrain.webp" alt="Pixeldrain" class="icon-servidor">`;
-                clase = "btn-obtener pixeldrain";
-            }
-            contenedorEnlace.innerHTML = `<a href="${enlaceReal}" class="${clase}" rel="nofollow noopener noreferrer" target="_blank">${btnStr}</a>`;
-        } else if (errorCarga) {
-            contenedorEnlace.innerHTML = '<span style="color:var(--red-main); font-weight:bold;">Error: El enlace no existe o no tienes internet. Conéctate a internet y actualiza la página.</span>';
-        } else {
-            contenedorEnlace.innerHTML = '<span class="contador-texto">Cargando enlace...</span>';
-            timeoutMostrarBoton = setTimeout(mostrarBoton, 200);
-        }
-    }
-}
-
-function cerrarModal() {
-    document.getElementById("modal-descarga").style.display = "none";
-    document.body.classList.remove("modal-abierto");
-    clearInterval(cuentaRegresivaInterval);
-    clearTimeout(timeoutMostrarBoton);
-    window.dispatchEvent(new Event("scroll"));
-}
-
-function configurarSeccionConPaginacion(inputId, btnId, gridId, noResultsId, itemsPorPagina = 28, nombreSeccion = "juegos") {
-    const searchInput = document.getElementById(inputId);
-    const btnBuscar   = document.getElementById(btnId);
-    const grid        = document.getElementById(gridId);
-    const noResults   = document.getElementById(noResultsId);
-    if (!grid) return;
-
-    const cards = Array.from(grid.querySelectorAll(".card"));
-    // Cache de nombres en minúsculas: evita getAttribute + toLowerCase en cada búsqueda
-    const cardNames = cards.map(c => (c.getAttribute("data-name") || "").toLowerCase());
-
-    let paginaActual = 1;
-    let terminoActual = "";
-
-    const paginacionFlotante = document.createElement("div");
-    paginacionFlotante.className = "paginacion-flotante";
-    grid.parentNode.appendChild(paginacionFlotante);
-
-    let sugerenciasBox = null;
-    if (searchInput) {
-        sugerenciasBox = document.createElement("div");
-        sugerenciasBox.className = "sugerencias-box";
-        searchInput.parentNode.appendChild(sugerenciasBox);
-    }
-
-    function renderizarPagina() {
-        // --- Filtro O(n) ---
-        const indicesFiltrados = [];
-        if (terminoActual === "") {
-            for (let i = 0; i < cards.length; i++) indicesFiltrados.push(i);
-        } else {
-            for (let i = 0; i < cards.length; i++) {
-                if (cardNames[i].includes(terminoActual)) indicesFiltrados.push(i);
-            }
-        }
-
-        const totalTarjetas = indicesFiltrados.length;
-        const totalPaginas  = Math.ceil(totalTarjetas / itemsPorPagina) || 1;
-        if (paginaActual > totalPaginas) paginaActual = totalPaginas;
-        if (paginaActual < 1) paginaActual = 1;
-
-        const inicio = (paginaActual - 1) * itemsPorPagina;
-        const fin    = Math.min(inicio + itemsPorPagina, totalTarjetas);
-
-        // --- Set de índices visibles: búsqueda O(1) ---
-        const visibles = new Set();
-        for (let i = inicio; i < fin; i++) visibles.add(indicesFiltrados[i]);
-
-        // --- Actualización O(n) ---
-        for (let i = 0; i < cards.length; i++) {
-            const card = cards[i];
-            if (visibles.has(i)) {
-                card.classList.remove("oculto-busqueda", "oculto-pagina");
-            } else {
-                card.classList.add("oculto-pagina");
-            }
-        }
-
-        if (noResults) noResults.style.display = totalTarjetas === 0 ? "block" : "none";
-        renderizarControles(totalPaginas, totalTarjetas);
-    }
-
-    function renderizarControles(totalPaginas, totalTarjetas) {
-        paginacionFlotante.innerHTML = "";
-        if (totalPaginas <= 1 || totalTarjetas === 0) {
-            paginacionFlotante.classList.remove("activa");
-            return;
-        }
-        paginacionFlotante.classList.add("activa");
-
-        const btnAnterior  = document.createElement("button");
-        const btnSiguiente = document.createElement("button");
-        btnAnterior.className  = "btn-flotante-pag";
-        btnSiguiente.className = "btn-flotante-pag";
-        btnAnterior.title = "Ir atrás";
-        btnSiguiente.title = `Ver más ${nombreSeccion}`;
-        btnAnterior.setAttribute("aria-label", "Ir atrás");
-        btnSiguiente.setAttribute("aria-label", `Ver más ${nombreSeccion}`);
-        btnAnterior.innerHTML  = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>`;
-        btnSiguiente.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>`;
-
-        if (paginaActual <= 1) { btnAnterior.style.opacity = "0.3"; btnAnterior.style.pointerEvents = "none"; }
-        else { btnAnterior.onclick = () => { paginaActual--; renderizarPagina(); subirAlInicioGrid(); }; }
-
-        if (paginaActual >= totalPaginas) { btnSiguiente.style.opacity = "0.3"; btnSiguiente.style.pointerEvents = "none"; }
-        else { btnSiguiente.onclick = () => { paginaActual++; renderizarPagina(); subirAlInicioGrid(); }; }
-
-        paginacionFlotante.appendChild(btnAnterior);
-        paginacionFlotante.appendChild(btnSiguiente);
-    }
-
-    function subirAlInicioGrid() {
-        const rect = grid.getBoundingClientRect();
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        window.scrollTo({ top: scrollTop + rect.top - 80, behavior: "auto" });
-    }
-
-    function aplicarFiltro(termino) {
-        terminoActual = termino.toLowerCase().trim();
-        paginaActual = 1;
-        renderizarPagina();
-    }
-
-    if (searchInput && sugerenciasBox) {
-        let debounceTimeout;
-        searchInput.addEventListener("input", () => {
-            clearTimeout(debounceTimeout);
-            debounceTimeout = setTimeout(() => {
-                const term = searchInput.value.toLowerCase().trim();
-                sugerenciasBox.innerHTML = "";
-                if (term === "") {
-                    sugerenciasBox.style.display = "none";
-                    aplicarFiltro("");
-                    return;
-                }
-                const fragment = document.createDocumentFragment();
-                let n = 0;
-                const regex = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
-                for (let i = 0; i < cardNames.length && n < 5; i++) {
-                    if (cardNames[i].includes(term)) {
-                        const div = document.createElement("div");
-                        div.className = "sugerencia-item";
-                        div.innerHTML = cardNames[i].replace(regex, "<strong style='color:#ef4444;'>$1</strong>");
-                        div.addEventListener("click", () => {
-                            searchInput.value = cardNames[i];
-                            sugerenciasBox.style.display = "none";
-                            aplicarFiltro(cardNames[i]);
-                        });
-                        fragment.appendChild(div);
-                        n++;
-                    }
-                }
-                if (n > 0) { sugerenciasBox.appendChild(fragment); sugerenciasBox.style.display = "block"; }
-                else sugerenciasBox.style.display = "none";
-            }, 300);
-        });
-        searchInput.addEventListener("keydown", (e) => {
-            if (e.key === "Enter") {
-                clearTimeout(debounceTimeout);
-                sugerenciasBox.style.display = "none";
-                aplicarFiltro(searchInput.value);
-            }
-        });
-        if (btnBuscar) {
-            btnBuscar.addEventListener("click", () => {
-                clearTimeout(debounceTimeout);
-                sugerenciasBox.style.display = "none";
-                aplicarFiltro(searchInput.value);
-            });
-        }
-        document.addEventListener("click", (e) => {
-            if (e.target !== searchInput && e.target !== sugerenciasBox) {
-                sugerenciasBox.style.display = "none";
-            }
-        });
-    }
-
-    renderizarPagina();
-}
-
-const btnSubir = document.getElementById("btnSubir");
-let scrollRendering = !1;
-function subirArriba() { window.scrollTo(0, 0); }
-window.addEventListener("scroll", () => {
-    if (!scrollRendering) {
-        window.requestAnimationFrame(() => {
-            const scrolled = window.scrollY > 200;
-            if (btnSubir) btnSubir.style.display = scrolled ? "flex" : "none";
-            scrollRendering = !1;
-        });
-        scrollRendering = !0;
-    }
-}, { passive: !0 });
-
-// ==========================================
-// CONFIGURACIÓN DE SUPABASE Y EMAILJS
-// ==========================================
-const SUPABASE_URL = "https://ivugtctnlwqpvwtlnvor.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_lbGjkctL-DUw9HySSDCgpA_yczDJ1D8";
-let db = null;
-let supabaseCargado = false;
-
-const EMAILJS_PUBLIC_KEY   = "DboyHW8tliQOpVrMO";
-const EMAILJS_SERVICE_ID   = "service_k32cptx";
-const EMAILJS_TEMPLATE_ID  = "template_8294pzs";
-const URL_PAGINA           = "https://pobrecraft.qzz.io/";
-
-// ✅ EmailJS se carga bajo demanda: solo la primera vez que alguien responde.
-let emailjsCargado = false;
-let emailjsPromesa = null;
-
-function cargarEmailJS() {
-    if (emailjsPromesa) return emailjsPromesa;
-    emailjsPromesa = new Promise((resolve) => {
-        const s = document.createElement("script");
-        s.src = "https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js";
-        s.onload = () => {
-            try {
-                if (typeof emailjs !== "undefined") {
-                    emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
-                    emailjsCargado = true;
-                }
-            } catch (e) { console.warn(e); }
-            resolve();
-        };
-        s.onerror = () => resolve();
-        document.head.appendChild(s);
-    });
-    return emailjsPromesa;
-}
-
-async function enviarCorreoRespuesta(destinatarioEmail, destinatarioNombre, remitenteNombre, previewMensaje, comentarioId) {
-    if (!destinatarioEmail || !destinatarioEmail.includes("@")) return;
-
-    // Se carga solo cuando realmente hace falta enviar un correo
-    await cargarEmailJS();
-    if (!emailjsCargado || typeof emailjs === "undefined") return;
-
-    try {
-        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-            to_email: destinatarioEmail,
-            to_name: destinatarioNombre || "",
-            from_name: remitenteNombre,
-            mensaje_preview: (previewMensaje || "").slice(0, 200),
-            comentario_url: URL_PAGINA + "#comentario-" + comentarioId
-        });
-        console.log("📧 Correo enviado a", destinatarioEmail);
-    } catch (err) {
-        console.warn("No se pudo enviar el correo de respuesta:", err);
-    }
-}
-
-// ✅ Carga diferida de Supabase (solo cuando se abre la pestaña de comentarios)
-function cargarSupabaseSiEsNecesario() {
-    if (supabaseCargado) return;
-    supabaseCargado = true;
-    console.log("⏳ Cargando Supabase bajo demanda...");
-
-    const script = document.createElement("script");
-    script.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
-    script.onload = () => {
-        try {
-            if (typeof supabase !== "undefined") {
-                db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                console.log("✅ Supabase listo.");
-                cargarMisVotos();
-                cargarComentarios();
-                suscribirComentariosEnVivo();
-                suscribirVotosEnVivo();
-                actualizarNotificaciones();
-            } else {
-                console.error("Supabase no se cargó correctamente.");
-            }
-        } catch (err) {
-            console.error("Error al inicializar Supabase:", err);
-        }
-    };
-    script.onerror = () => console.error("No se pudo descargar Supabase.");
-    document.body.appendChild(script);
-}
-
-const AVATAR_DEFAULT = "canaima3-1.png";
-const CLAVE_MI_NOMBRE = "pobrecraft_mi_nombre";
-const CLAVE_MI_AVATAR = "pobrecraft_mi_avatar";
-const CLAVE_MI_USER_ID = "pobrecraft_mi_user_id";
-const CLAVE_MI_EMAIL = "pobrecraft_mi_email";
-
-function obtenerMiEmail() { try { return (localStorage.getItem(CLAVE_MI_EMAIL) || "").trim(); } catch (err) { return ""; } }
-function guardarMiEmail(email) { try { localStorage.setItem(CLAVE_MI_EMAIL, email || ""); } catch (err) {} }
-
-function obtenerMiUserId() {
-    try {
-        let id = localStorage.getItem(CLAVE_MI_USER_ID);
-        if (!id) {
-            id = "u_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 10);
-            localStorage.setItem(CLAVE_MI_USER_ID, id);
-        }
-        return id;
-    } catch (err) { return "u_anon_" + Math.random().toString(36).slice(2, 10); }
-}
-const MI_USER_ID = obtenerMiUserId();
-
-const STORAGE_BUCKET_AVATARES = "avatares";
-const STORAGE_BUCKET_COMENTARIOS = "comentarios";
-
-async function subirArchivoStorage(bucket, fileOrBlob, extension) {
-    if (!db) return null;
-    const ext = extension || (fileOrBlob.type && fileOrBlob.type.split("/")[1]) || "bin";
-    const nombre = `${MI_USER_ID}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
-    const contentType = fileOrBlob.type || `image/${ext}`;
-    const { error } = await db.storage.from(bucket).upload(nombre, fileOrBlob, {
-        contentType, cacheControl: "31536000", upsert: false
-    });
-    if (error) { console.error(`Error al subir ${nombre} a ${bucket}:`, error); return null; }
-    const { data } = db.storage.from(bucket).getPublicUrl(nombre);
-    return data ? data.publicUrl : null;
-}
-
-function comprimirImagenABlob(file, maxSize, calidad) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement("canvas");
-                let ancho = img.width, alto = img.height;
-                if (ancho > alto) {
-                    if (ancho > maxSize) { alto *= maxSize / ancho; ancho = maxSize; }
-                } else {
-                    if (alto > maxSize) { ancho *= maxSize / alto; alto = maxSize; }
-                }
-                canvas.width = Math.round(ancho);
-                canvas.height = Math.round(alto);
-                canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
-                canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("canvas.toBlob falló")), "image/webp", calidad);
-            };
-            img.onerror = reject;
-            img.src = e.target.result;
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-    });
-}
-
-async function subirAvatarAStorage(file) {
-    const blob = await comprimirImagenABlob(file, 96, 0.75);
-    return await subirArchivoStorage(STORAGE_BUCKET_AVATARES, blob, "webp");
-}
-
-async function subirImagenComentarioAStorage(file) {
-    const blob = await comprimirImagenABlob(file, 640, 0.72);
-    return await subirArchivoStorage(STORAGE_BUCKET_COMENTARIOS, blob, "webp");
-}
-
-let misVotos = new Map();
-
-async function cargarMisVotos() {
-    if (!db) return;
-    try {
-        const { data, error } = await db.from("votos").select("comentario_id, tipo").eq("user_id", MI_USER_ID);
-        if (error) throw error;
-        misVotos.clear();
-        (data || []).forEach((v) => misVotos.set(Number(v.comentario_id), v.tipo));
-    } catch (err) { console.warn("No se pudieron cargar mis votos:", err); }
-}
-
-let canalVotosEnVivo = null;
-function suscribirVotosEnVivo() {
-    if (!db || canalVotosEnVivo) return;
-    try {
-        canalVotosEnVivo = db.channel("votos-realtime")
-            .on("postgres_changes", { event: "*", schema: "public", table: "votos" }, async (payload) => {
-                const { new: nuevo, old: viejo } = payload;
-                const fila = nuevo || viejo;
-                if (!fila) return;
-                const comentarioId = Number(fila.comentario_id);
-                if (!comentarioId) return;
-                try {
-                    const { data, error } = await db.from("comentarios").select("likes, dislikes").eq("id", comentarioId).maybeSingle();
-                    if (!error && data) {
-                        actualizarContadoresEnTarjeta(comentarioId, Number(data.likes) || 0, Number(data.dislikes) || 0);
-                    }
-                } catch (err) { console.warn("No se pudieron refrescar los votos:", err); }
-            })
-            .subscribe((status) => console.log("Canal realtime votos:", status));
-    } catch (err) { console.error("No se pudo iniciar el canal realtime de votos:", err); }
-}
-
-let avatarUrlSeleccionado = null;
-let imagenComentarioUrlSeleccionado = null;
-let respuestaAbiertaId = null;
-let gifUrlSeleccionado = null;
-
-const MAX_GIF_BYTES    = 2 * 1024 * 1024;
-const MAX_IMAGEN_BYTES = 2 * 1024 * 1024;
-const MAX_VIDEO_BYTES  = 15 * 1024 * 1024;
-
-function escaparHTML(texto) {
-    const div = document.createElement("div");
-    div.textContent = texto;
-    return div.innerHTML;
-}
-
-function obtenerMiNombre() { try { return (localStorage.getItem(CLAVE_MI_NOMBRE) || "").trim(); } catch (err) { return ""; } }
-function guardarMiNombre(nombre) { try { localStorage.setItem(CLAVE_MI_NOMBRE, nombre); } catch (err) {} }
-
-function obtenerMiAvatar() { try { return localStorage.getItem(CLAVE_MI_AVATAR) || ""; } catch (err) { return ""; } }
-function guardarMiAvatar(dataUrl) {
-    try {
-        if (dataUrl) localStorage.setItem(CLAVE_MI_AVATAR, dataUrl);
-        else localStorage.removeItem(CLAVE_MI_AVATAR);
-    } catch (err) { console.warn("No se pudo guardar el avatar en localStorage:", err); }
-}
-
-async function nombreDisponible(nombre) {
-    if (!db) return true;
-    const nombreEscapado = nombre.trim().toLowerCase().replace(/[%_]/g, "\\$&");
-    try {
-        const { data, error } = await db.from("comentarios").select("user_id").ilike("nombre", nombreEscapado).limit(5);
-        if (error || !data || data.length === 0) return true;
-        return data.every((r) => !r.user_id || r.user_id === MI_USER_ID);
-    } catch (err) { return true; }
-}
-
-function formatearFechaComentario(fechaISO) {
-    return fechaISO
-        ? new Date(fechaISO).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })
-        : "";
-}
-
-function renderizarTarjetaComentarioHTML(c, esRespuesta, nombrePadre) {
-    const avatar = c.avatar_url && c.avatar_url.trim() !== "" ? c.avatar_url : AVATAR_DEFAULT;
-    const fecha = formatearFechaComentario(c.created_at);
-    const imagenHTML = c.imagen_url
-        ? `<img src="${c.imagen_url}" alt="Imagen adjunta de ${escaparHTML(c.nombre)}" class="comentario-mensaje-imagen" loading="lazy" decoding="async" fetchpriority="low">`
-        : "";
-    const esVideoGif = c.gif_url && /\.(webm|mp4)(\?|$)/i.test(c.gif_url);
-    const gifHTML = c.gif_url
-        ? (esVideoGif
-            ? `<div class="video-wrap" data-paused="true"><video src="${c.gif_url}" class="comentario-mensaje-gif video-reproducible" preload="none" playsinline onerror="this.parentElement.style.display='none'" onplay="this.closest('.video-wrap').dataset.paused='false'" onpause="this.closest('.video-wrap').dataset.paused='true'" onended="this.closest('.video-wrap').dataset.paused='true'"></video></div>`
-            : `<img src="${c.gif_url}" alt="GIF de ${escaparHTML(c.nombre)}" class="comentario-mensaje-gif" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">`)
-        : "";
-    const avatarClase = esRespuesta ? "comentario-tarjeta-avatar comentario-tarjeta-avatar-reply" : "comentario-tarjeta-avatar";
-    const referenciaHTML = (esRespuesta && nombrePadre)
-        ? `<span class="comentario-referencia">↩ Respondiendo a <strong>@${escaparHTML(nombrePadre)}</strong></span>`
-        : "";
-    const esMio = c.user_id && c.user_id === MI_USER_ID;
-    const btnBorrarHTML = esMio
-        ? `<button type="button" class="btn-borrar-comentario" data-id="${c.id}" title="Borrar mi comentario" aria-label="Borrar mi comentario"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6M14 11v6"></path><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path></svg></button>`
-        : "";
-    const likes = Number(c.likes) || 0;
-    const dislikes = Number(c.dislikes) || 0;
-
-    return `
+    `;frame.appendChild(script)}
+function esElementoDeLaApp(el){while(el&&el!==document.body){const tag=el.tagName;if(tag==="HEADER"||tag==="NAV"||tag==="MAIN"||tag==="FOOTER")return!0;if(tag==="INPUT"&&el.name==="tabs")return!0;const id=el.id;if(id==="btnSubir"||id==="modal-descarga"||id==="modal-publicidad")return!0;if(el.classList&&el.classList.contains("toast-notificacion"))return!0;el=el.parentElement}
+return!1}
+function bloquearClicsFantasma(e){if(esElementoDeLaApp(e.target))return;e.stopPropagation();e.stopImmediatePropagation()}
+function cerrarAnuncio(){anuncioCerrado=!0;const anuncioFijo=document.getElementById("modal-publicidad");if(anuncioFijo)anuncioFijo.style.setProperty("display","none","important");const frame=document.getElementById("frame");if(frame)frame.innerHTML="";const TAGS_PERMITIDOS=new Set(["SCRIPT","STYLE","LINK","HEADER","NAV","MAIN","FOOTER","INPUT","BUTTON"]);const IDs_PERMITIDOS=new Set(["modal-publicidad","modal-descarga","frame","btnSubir"]);Array.from(document.body.children).forEach(el=>{if(TAGS_PERMITIDOS.has(el.tagName))return;if(IDs_PERMITIDOS.has(el.id))return;if(el.classList.contains("container"))return;if(el.classList.contains("tabs-container"))return;if(el.classList.contains("contenidos"))return;el.remove()});document.addEventListener("click",bloquearClicsFantasma,!0);document.addEventListener("mousedown",bloquearClicsFantasma,!0);document.addEventListener("touchstart",bloquearClicsFantasma,!0);try{window.open=function(){console.warn("window.open bloqueado tras cerrar el anuncio");return null}}catch(err){}}
+document.addEventListener("DOMContentLoaded",()=>{const btnCerrar=document.getElementById("btn-cerrar-anuncio");if(btnCerrar){btnCerrar.addEventListener("click",(e)=>{e.preventDefault();e.stopPropagation();cerrarAnuncio()})}});function irAlEnlace(identificador,imagen){const modal=document.getElementById("modal-descarga");const imgElement=document.getElementById("modal-img");const tituloElement=document.getElementById("modal-titulo");const contenedorEnlace=document.getElementById("modal-enlace");const contenedorRequisitos=document.getElementById("modal-requisitos");const contenedorPubli=document.getElementById("modal-publicidad");modal.style.display="flex";modal.scrollTop=0;document.body.classList.add("modal-abierto");tituloElement.textContent=identificador;contenedorEnlace.innerHTML='<span class="contador-texto" id="countdown-modal">Preparando la descarga...</span>';const countdownEl=document.getElementById("countdown-modal");contenedorRequisitos.style.display="none";if(imagen){imgElement.src=imagen;imgElement.style.display="block"}else{imgElement.style.display="none"}
+cargarRequisitos().then((datos)=>{if(datos&&datos[identificador]){contenedorRequisitos.innerHTML="<h3>Requisitos Mínimos:</h3>"+datos[identificador];contenedorRequisitos.style.display="block"}});let enlaceReal=null;let errorCarga=!1;let segundosRestantes=4;if(baseDatosEnlaces){enlaceReal=baseDatosEnlaces[identificador]||null;if(!enlaceReal)errorCarga=!0}else{fetch(URL_EXTERNA).then((res)=>(res.ok?res.json():Promise.reject())).then((datos)=>{baseDatosEnlaces=datos;enlaceReal=datos[identificador]||null;if(!enlaceReal)errorCarga=!0}).catch(()=>{errorCarga=!0})}
+clearInterval(cuentaRegresivaInterval);cuentaRegresivaInterval=setInterval(()=>{segundosRestantes--;if(segundosRestantes>0){if(countdownEl){countdownEl.textContent=`Tu enlace estará listo en ${segundosRestantes} segundos...`}}else{clearInterval(cuentaRegresivaInterval);mostrarBoton()}},1000);function mostrarBoton(){if(enlaceReal){const urlLower=enlaceReal.toLowerCase();let btnStr="Ir al sitio oficial",clase="btn-obtener rojo";if(urlLower.includes("mediafire.com")){btnStr=`Descargar en <img src="img/mediafire.webp" alt="MediaFire" class="icon-servidor">`;clase="btn-obtener"}else if(urlLower.includes("drive.google.com")||urlLower.includes("docs.google.com")){btnStr=`Descargar en <img src="img/google driver.webp" alt="Drive" class="icon-servidor">`;clase="btn-obtener google"}else if(urlLower.includes("pixeldrain.com")){btnStr=`Descargar en <img src="img/pixeldrain.webp" alt="Pixeldrain" class="icon-servidor">`;clase="btn-obtener pixeldrain"}
+contenedorEnlace.innerHTML=`<a href="${enlaceReal}" class="${clase}" rel="nofollow noopener noreferrer" target="_blank">${btnStr}</a>`}else if(errorCarga){contenedorEnlace.innerHTML='<span style="color:var(--red-main); font-weight:bold;">Error: El enlace no existe o no tienes internet. Conéctate a internet y actualiza la página.</span>'}else{contenedorEnlace.innerHTML='<span class="contador-texto">Cargando enlace...</span>';timeoutMostrarBoton=setTimeout(mostrarBoton,200)}}}
+function cerrarModal(){document.getElementById("modal-descarga").style.display="none";document.body.classList.remove("modal-abierto");clearInterval(cuentaRegresivaInterval);clearTimeout(timeoutMostrarBoton);window.dispatchEvent(new Event("scroll"))}
+function configurarSeccionConPaginacion(inputId,btnId,gridId,noResultsId,itemsPorPagina=28,nombreSeccion="juegos"){const searchInput=document.getElementById(inputId);const btnBuscar=document.getElementById(btnId);const grid=document.getElementById(gridId);const noResults=document.getElementById(noResultsId);if(!grid)return;const cards=Array.from(grid.querySelectorAll(".card"));const cardNames=cards.map(c=>(c.getAttribute("data-name")||"").toLowerCase());let paginaActual=1;let terminoActual="";const paginacionFlotante=document.createElement("div");paginacionFlotante.className="paginacion-flotante";grid.parentNode.appendChild(paginacionFlotante);let sugerenciasBox=null;if(searchInput){sugerenciasBox=document.createElement("div");sugerenciasBox.className="sugerencias-box";searchInput.parentNode.appendChild(sugerenciasBox)}
+function renderizarPagina(){const indicesFiltrados=[];if(terminoActual===""){for(let i=0;i<cards.length;i++)indicesFiltrados.push(i);}else{for(let i=0;i<cards.length;i++){if(cardNames[i].includes(terminoActual))indicesFiltrados.push(i);}}
+const totalTarjetas=indicesFiltrados.length;const totalPaginas=Math.ceil(totalTarjetas/itemsPorPagina)||1;if(paginaActual>totalPaginas)paginaActual=totalPaginas;if(paginaActual<1)paginaActual=1;const inicio=(paginaActual-1)*itemsPorPagina;const fin=Math.min(inicio+itemsPorPagina,totalTarjetas);const visibles=new Set();for(let i=inicio;i<fin;i++)visibles.add(indicesFiltrados[i]);for(let i=0;i<cards.length;i++){const card=cards[i];if(visibles.has(i)){card.classList.remove("oculto-busqueda","oculto-pagina")}else{card.classList.add("oculto-pagina")}}
+if(noResults)noResults.style.display=totalTarjetas===0?"block":"none";renderizarControles(totalPaginas,totalTarjetas)}
+function renderizarControles(totalPaginas,totalTarjetas){paginacionFlotante.innerHTML="";if(totalPaginas<=1||totalTarjetas===0){paginacionFlotante.classList.remove("activa");return}
+paginacionFlotante.classList.add("activa");const btnAnterior=document.createElement("button");const btnSiguiente=document.createElement("button");btnAnterior.className="btn-flotante-pag";btnSiguiente.className="btn-flotante-pag";btnAnterior.title="Ir atrás";btnSiguiente.title=`Ver más ${nombreSeccion}`;btnAnterior.setAttribute("aria-label","Ir atrás");btnSiguiente.setAttribute("aria-label",`Ver más ${nombreSeccion}`);btnAnterior.innerHTML=`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>`;btnSiguiente.innerHTML=`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>`;if(paginaActual<=1){btnAnterior.style.opacity="0.3";btnAnterior.style.pointerEvents="none"}else{btnAnterior.onclick=()=>{paginaActual--;renderizarPagina();subirAlInicioGrid()}}
+if(paginaActual>=totalPaginas){btnSiguiente.style.opacity="0.3";btnSiguiente.style.pointerEvents="none"}else{btnSiguiente.onclick=()=>{paginaActual++;renderizarPagina();subirAlInicioGrid()}}
+paginacionFlotante.appendChild(btnAnterior);paginacionFlotante.appendChild(btnSiguiente)}
+function subirAlInicioGrid(){const rect=grid.getBoundingClientRect();const scrollTop=window.pageYOffset||document.documentElement.scrollTop;window.scrollTo({top:scrollTop+rect.top-80,behavior:"auto"})}
+function aplicarFiltro(termino){terminoActual=termino.toLowerCase().trim();paginaActual=1;renderizarPagina()}
+if(searchInput&&sugerenciasBox){let debounceTimeout;searchInput.addEventListener("input",()=>{clearTimeout(debounceTimeout);debounceTimeout=setTimeout(()=>{const term=searchInput.value.toLowerCase().trim();sugerenciasBox.innerHTML="";if(term===""){sugerenciasBox.style.display="none";aplicarFiltro("");return}
+const fragment=document.createDocumentFragment();let n=0;const regex=new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,"gi");for(let i=0;i<cardNames.length&&n<5;i++){if(cardNames[i].includes(term)){const div=document.createElement("div");div.className="sugerencia-item";div.innerHTML=cardNames[i].replace(regex,"<strong style='color:#ef4444;'>$1</strong>");div.addEventListener("click",()=>{searchInput.value=cardNames[i];sugerenciasBox.style.display="none";aplicarFiltro(cardNames[i])});fragment.appendChild(div);n++}}
+if(n>0){sugerenciasBox.appendChild(fragment);sugerenciasBox.style.display="block"}else sugerenciasBox.style.display="none"},300)});searchInput.addEventListener("keydown",(e)=>{if(e.key==="Enter"){clearTimeout(debounceTimeout);sugerenciasBox.style.display="none";aplicarFiltro(searchInput.value)}});if(btnBuscar){btnBuscar.addEventListener("click",()=>{clearTimeout(debounceTimeout);sugerenciasBox.style.display="none";aplicarFiltro(searchInput.value)})}
+document.addEventListener("click",(e)=>{if(e.target!==searchInput&&e.target!==sugerenciasBox){sugerenciasBox.style.display="none"}})}
+renderizarPagina()}
+const btnSubir=document.getElementById("btnSubir");let scrollRendering=!1;function subirArriba(){window.scrollTo(0,0)}
+window.addEventListener("scroll",()=>{if(!scrollRendering){window.requestAnimationFrame(()=>{const scrolled=window.scrollY>200;if(btnSubir)btnSubir.style.display=scrolled?"flex":"none";scrollRendering=!1});scrollRendering=!0}},{passive:!0});const SUPABASE_URL="https://ivugtctnlwqpvwtlnvor.supabase.co";const SUPABASE_ANON_KEY="sb_publishable_lbGjkctL-DUw9HySSDCgpA_yczDJ1D8";let db=null;let supabaseCargado=!1;const EMAILJS_PUBLIC_KEY="DboyHW8tliQOpVrMO";const EMAILJS_SERVICE_ID="service_k32cptx";const EMAILJS_TEMPLATE_ID="template_8294pzs";const URL_PAGINA="https://pobrecraft.qzz.io/";let emailjsCargado=!1;let emailjsPromesa=null;function cargarEmailJS(){if(emailjsPromesa)return emailjsPromesa;emailjsPromesa=new Promise((resolve)=>{const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js";s.onload=()=>{try{if(typeof emailjs!=="undefined"){emailjs.init({publicKey:EMAILJS_PUBLIC_KEY});emailjsCargado=!0}}catch(e){console.warn(e)}
+resolve()};s.onerror=()=>resolve();document.head.appendChild(s)});return emailjsPromesa}
+async function enviarCorreoRespuesta(destinatarioEmail,destinatarioNombre,remitenteNombre,previewMensaje,comentarioId){if(!destinatarioEmail||!destinatarioEmail.includes("@"))return;await cargarEmailJS();if(!emailjsCargado||typeof emailjs==="undefined")return;try{await emailjs.send(EMAILJS_SERVICE_ID,EMAILJS_TEMPLATE_ID,{to_email:destinatarioEmail,to_name:destinatarioNombre||"",from_name:remitenteNombre,mensaje_preview:(previewMensaje||"").slice(0,200),comentario_url:URL_PAGINA+"#comentario-"+comentarioId});console.log("📧 Correo enviado a",destinatarioEmail)}catch(err){console.warn("No se pudo enviar el correo de respuesta:",err)}}
+function cargarSupabaseSiEsNecesario(){if(supabaseCargado)return;supabaseCargado=!0;console.log("⏳ Cargando Supabase bajo demanda...");const script=document.createElement("script");script.src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";script.onload=()=>{try{if(typeof supabase!=="undefined"){db=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);console.log("✅ Supabase listo.");cargarMisVotos();cargarComentarios();suscribirComentariosEnVivo();suscribirVotosEnVivo();actualizarNotificaciones()}else{console.error("Supabase no se cargó correctamente.")}}catch(err){console.error("Error al inicializar Supabase:",err)}};script.onerror=()=>console.error("No se pudo descargar Supabase.");document.body.appendChild(script)}
+const AVATAR_DEFAULT="canaima3-1.png";const CLAVE_MI_NOMBRE="pobrecraft_mi_nombre";const CLAVE_MI_AVATAR="pobrecraft_mi_avatar";const CLAVE_MI_USER_ID="pobrecraft_mi_user_id";const CLAVE_MI_EMAIL="pobrecraft_mi_email";function obtenerMiEmail(){try{return(localStorage.getItem(CLAVE_MI_EMAIL)||"").trim()}catch(err){return""}}
+function guardarMiEmail(email){try{localStorage.setItem(CLAVE_MI_EMAIL,email||"")}catch(err){}}
+function obtenerMiUserId(){try{let id=localStorage.getItem(CLAVE_MI_USER_ID);if(!id){id="u_"+Date.now().toString(36)+"_"+Math.random().toString(36).slice(2,10);localStorage.setItem(CLAVE_MI_USER_ID,id)}
+return id}catch(err){return"u_anon_"+Math.random().toString(36).slice(2,10)}}
+const MI_USER_ID=obtenerMiUserId();const STORAGE_BUCKET_AVATARES="avatares";const STORAGE_BUCKET_COMENTARIOS="comentarios";async function subirArchivoStorage(bucket,fileOrBlob,extension){if(!db)return null;const ext=extension||(fileOrBlob.type&&fileOrBlob.type.split("/")[1])||"bin";const nombre=`${MI_USER_ID}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;const contentType=fileOrBlob.type||`image/${ext}`;const{error}=await db.storage.from(bucket).upload(nombre,fileOrBlob,{contentType,cacheControl:"31536000",upsert:!1});if(error){console.error(`Error al subir ${nombre} a ${bucket}:`,error);return null}
+const{data}=db.storage.from(bucket).getPublicUrl(nombre);return data?data.publicUrl:null}
+function comprimirImagenABlob(file,maxSize,calidad){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=(e)=>{const img=new Image();img.onload=()=>{const canvas=document.createElement("canvas");let ancho=img.width,alto=img.height;if(ancho>alto){if(ancho>maxSize){alto*=maxSize/ancho;ancho=maxSize}}else{if(alto>maxSize){ancho*=maxSize/alto;alto=maxSize}}
+canvas.width=Math.round(ancho);canvas.height=Math.round(alto);canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);canvas.toBlob((blob)=>blob?resolve(blob):reject(new Error("canvas.toBlob falló")),"image/webp",calidad)};img.onerror=reject;img.src=e.target.result};reader.onerror=reject;reader.readAsDataURL(file)})}
+async function subirAvatarAStorage(file){const blob=await comprimirImagenABlob(file,96,0.75);return await subirArchivoStorage(STORAGE_BUCKET_AVATARES,blob,"webp")}
+async function subirImagenComentarioAStorage(file){const blob=await comprimirImagenABlob(file,640,0.72);return await subirArchivoStorage(STORAGE_BUCKET_COMENTARIOS,blob,"webp")}
+let misVotos=new Map();async function cargarMisVotos(){if(!db)return;try{const{data,error}=await db.from("votos").select("comentario_id, tipo").eq("user_id",MI_USER_ID);if(error)throw error;misVotos.clear();(data||[]).forEach((v)=>misVotos.set(Number(v.comentario_id),v.tipo))}catch(err){console.warn("No se pudieron cargar mis votos:",err)}}
+let canalVotosEnVivo=null;function suscribirVotosEnVivo(){if(!db||canalVotosEnVivo)return;try{canalVotosEnVivo=db.channel("votos-realtime").on("postgres_changes",{event:"*",schema:"public",table:"votos"},async(payload)=>{const{new:nuevo,old:viejo}=payload;const fila=nuevo||viejo;if(!fila)return;const comentarioId=Number(fila.comentario_id);if(!comentarioId)return;try{const{data,error}=await db.from("comentarios").select("likes, dislikes").eq("id",comentarioId).maybeSingle();if(!error&&data){actualizarContadoresEnTarjeta(comentarioId,Number(data.likes)||0,Number(data.dislikes)||0)}}catch(err){console.warn("No se pudieron refrescar los votos:",err)}}).subscribe((status)=>console.log("Canal realtime votos:",status))}catch(err){console.error("No se pudo iniciar el canal realtime de votos:",err)}}
+let avatarUrlSeleccionado=null;let imagenComentarioUrlSeleccionado=null;let respuestaAbiertaId=null;let gifUrlSeleccionado=null;const MAX_GIF_BYTES=2*1024*1024;const MAX_IMAGEN_BYTES=2*1024*1024;const MAX_VIDEO_BYTES=15*1024*1024;function escaparHTML(texto){const div=document.createElement("div");div.textContent=texto;return div.innerHTML}
+function obtenerMiNombre(){try{return(localStorage.getItem(CLAVE_MI_NOMBRE)||"").trim()}catch(err){return""}}
+function guardarMiNombre(nombre){try{localStorage.setItem(CLAVE_MI_NOMBRE,nombre)}catch(err){}}
+function obtenerMiAvatar(){try{return localStorage.getItem(CLAVE_MI_AVATAR)||""}catch(err){return""}}
+function guardarMiAvatar(dataUrl){try{if(dataUrl)localStorage.setItem(CLAVE_MI_AVATAR,dataUrl);else localStorage.removeItem(CLAVE_MI_AVATAR)}catch(err){console.warn("No se pudo guardar el avatar en localStorage:",err)}}
+async function nombreDisponible(nombre){if(!db)return!0;const nombreEscapado=nombre.trim().toLowerCase().replace(/[%_]/g,"\\$&");try{const{data,error}=await db.from("comentarios").select("user_id").ilike("nombre",nombreEscapado).limit(5);if(error||!data||data.length===0)return!0;return data.every((r)=>!r.user_id||r.user_id===MI_USER_ID)}catch(err){return!0}}
+function formatearFechaComentario(fechaISO){return fechaISO?new Date(fechaISO).toLocaleDateString("es-ES",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}):""}
+function renderizarTarjetaComentarioHTML(c,esRespuesta,nombrePadre){const avatar=c.avatar_url&&c.avatar_url.trim()!==""?c.avatar_url:AVATAR_DEFAULT;const fecha=formatearFechaComentario(c.created_at);const imagenHTML=c.imagen_url?`<img src="${c.imagen_url}" alt="Imagen adjunta de ${escaparHTML(c.nombre)}" class="comentario-mensaje-imagen" loading="lazy" decoding="async" fetchpriority="low">`:"";const esVideoGif=c.gif_url&&/\.(webm|mp4)(\?|$)/i.test(c.gif_url);const gifHTML=c.gif_url?(esVideoGif?`<div class="video-wrap" data-paused="true"><video src="${c.gif_url}" class="comentario-mensaje-gif video-reproducible" preload="none" playsinline onerror="this.parentElement.style.display='none'" onplay="this.closest('.video-wrap').dataset.paused='false'" onpause="this.closest('.video-wrap').dataset.paused='true'" onended="this.closest('.video-wrap').dataset.paused='true'"></video></div>`:`<img src="${c.gif_url}" alt="GIF de ${escaparHTML(c.nombre)}" class="comentario-mensaje-gif" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">`):"";const avatarClase=esRespuesta?"comentario-tarjeta-avatar comentario-tarjeta-avatar-reply":"comentario-tarjeta-avatar";const referenciaHTML=(esRespuesta&&nombrePadre)?`<span class="comentario-referencia">↩ Respondiendo a <strong>@${escaparHTML(nombrePadre)}</strong></span>`:"";const esMio=c.user_id&&c.user_id===MI_USER_ID;const btnBorrarHTML=esMio?`<button type="button" class="btn-borrar-comentario" data-id="${c.id}" title="Borrar mi comentario" aria-label="Borrar mi comentario"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6M14 11v6"></path><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path></svg></button>`:"";const likes=Number(c.likes)||0;const dislikes=Number(c.dislikes)||0;return `
       <div class="comentario-swipe-wrap" data-id="${c.id}" id="comentario-${c.id}">
         <div class="comentario-swipe-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"></polyline><path d="M4 12h11a5 5 0 0 1 5 5v1"></path></svg></div>
         <div class="comentario-tarjeta" data-id="${c.id}" data-nombre="${escaparHTML(c.nombre)}">
@@ -616,104 +82,25 @@ function renderizarTarjetaComentarioHTML(c, esRespuesta, nombrePadre) {
         </div>
         <div class="comentario-respuesta-caja" id="respuesta-caja-${c.id}"></div>
       </div>
-    `;
-}
-
-function renderizarComentarioConRespuestasHTML(raiz, hijos, porId) {
-    const raizHTML = renderizarTarjetaComentarioHTML(raiz, false, null);
-    if (!hijos.length) return raizHTML;
-    const hijosHTML = hijos.map((h) => {
-        let padre = null;
-        if (h.parent_id != null) {
-            padre = porId.get(h.parent_id) || porId.get(String(h.parent_id)) || porId.get(Number(h.parent_id)) || null;
-        }
-        const nombrePadre = padre && String(padre.id) !== String(raiz.id) ? padre.nombre : null;
-        return renderizarTarjetaComentarioHTML(h, true, nombrePadre);
-    }).join("");
-    const n = hijos.length;
-    const textoVer = `Ver ${n} ${n === 1 ? "respuesta" : "respuestas"}`;
-    return `
+    `}
+function renderizarComentarioConRespuestasHTML(raiz,hijos,porId){const raizHTML=renderizarTarjetaComentarioHTML(raiz,!1,null);if(!hijos.length)return raizHTML;const hijosHTML=hijos.map((h)=>{let padre=null;if(h.parent_id!=null){padre=porId.get(h.parent_id)||porId.get(String(h.parent_id))||porId.get(Number(h.parent_id))||null}
+const nombrePadre=padre&&String(padre.id)!==String(raiz.id)?padre.nombre:null;return renderizarTarjetaComentarioHTML(h,!0,nombrePadre)}).join("");const n=hijos.length;const textoVer=`Ver ${n} ${n === 1 ? "respuesta" : "respuestas"}`;return `
       ${raizHTML}
       <button type="button" class="btn-ver-respuestas" data-target="respuestas-${raiz.id}" data-texto-ver="${textoVer}">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
         <span class="texto-ver-respuestas">${textoVer}</span>
       </button>
       <div class="comentario-respuestas-lista" id="respuestas-${raiz.id}" style="display:none;">${hijosHTML}</div>
-    `;
-}
-
-async function cargarComentarios() {
-    const contenedor = document.getElementById("lista-comentarios");
-    if (!contenedor) return;
-    if (!db) {
-        contenedor.innerHTML = '<p style="color:var(--text-dark);text-align:center;">Abre esta pestaña desde el sitio para cargar los comentarios.</p>';
-        return;
-    }
-    try {
-        const { data, error } = await db.from("comentarios")
-            .select("id, nombre, mensaje, avatar_url, imagen_url, gif_url, parent_id, created_at, likes, dislikes, user_id")
-            .order("created_at", { ascending: false })
-            .limit(300);
-        if (error) throw error;
-        if (!data || data.length === 0) {
-            contenedor.innerHTML = '<p style="color:var(--text-dark);text-align:center;padding:15px;">Aún no hay comentarios. ¡Sé el primero en escribir!</p>';
-            return;
-        }
-        const porId = new Map();
-        data.forEach((c) => porId.set(c.id, c));
-        function raizDe(c) {
-            let actual = c, guard = 0;
-            while (actual.parent_id && porId.has(actual.parent_id) && guard < 30) {
-                actual = porId.get(actual.parent_id);
-                guard++;
-            }
-            return actual;
-        }
-        const raices = [];
-        const respuestasPorRaiz = new Map();
-        data.forEach((c) => {
-            if (!c.parent_id || !porId.has(c.parent_id)) {
-                raices.push(c);
-            } else {
-                const raiz = raizDe(c);
-                if (!respuestasPorRaiz.has(raiz.id)) respuestasPorRaiz.set(raiz.id, []);
-                respuestasPorRaiz.get(raiz.id).push(c);
-            }
-        });
-        raices.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-        raices.forEach((r) => {
-            const hijos = respuestasPorRaiz.get(r.id) || [];
-            hijos.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-        });
-        contenedor.innerHTML = raices.map((raiz) => renderizarComentarioConRespuestasHTML(raiz, respuestasPorRaiz.get(raiz.id) || [], porId)).join("");
-        actualizarNotificaciones();
-    } catch (err) {
-        console.error("Error al cargar comentarios:", err);
-        contenedor.innerHTML = '<p style="color:var(--red-main);text-align:center;">No se pudieron cargar los comentarios.</p>';
-    }
-}
-
-function cerrarRespuestaAbierta() {
-    if (respuestaAbiertaId == null) return;
-    const cajaAnterior = document.getElementById(`respuesta-caja-${respuestaAbiertaId}`);
-    if (cajaAnterior) {
-        cajaAnterior.classList.remove("activa");
-        cajaAnterior.innerHTML = "";
-    }
-    respuestaAbiertaId = null;
-}
-
-function abrirRespuesta(id, nombreAutor) {
-    id = String(id);
-    if (respuestaAbiertaId === id) { cerrarRespuestaAbierta(); return; }
-    cerrarRespuestaAbierta();
-    const caja = document.getElementById(`respuesta-caja-${id}`);
-    if (!caja) return;
-    respuestaAbiertaId = id;
-    const previewAvatarEl = document.getElementById("avatar-preview");
-    const miAvatar = (previewAvatarEl && previewAvatarEl.src) || AVATAR_DEFAULT;
-    const miNombreGuardado = obtenerMiNombre();
-    caja.innerHTML = `
+    `}
+async function cargarComentarios(){const contenedor=document.getElementById("lista-comentarios");if(!contenedor)return;if(!db){contenedor.innerHTML='<p style="color:var(--text-dark);text-align:center;">Abre esta pestaña desde el sitio para cargar los comentarios.</p>';return}
+try{const{data,error}=await db.from("comentarios").select("id, nombre, mensaje, avatar_url, imagen_url, gif_url, parent_id, created_at, likes, dislikes, user_id").order("created_at",{ascending:!1}).limit(300);if(error)throw error;if(!data||data.length===0){contenedor.innerHTML='<p style="color:var(--text-dark);text-align:center;padding:15px;">Aún no hay comentarios. ¡Sé el primero en escribir!</p>';return}
+const porId=new Map();data.forEach((c)=>porId.set(c.id,c));function raizDe(c){let actual=c,guard=0;while(actual.parent_id&&porId.has(actual.parent_id)&&guard<30){actual=porId.get(actual.parent_id);guard++}
+return actual}
+const raices=[];const respuestasPorRaiz=new Map();data.forEach((c)=>{if(!c.parent_id||!porId.has(c.parent_id)){raices.push(c)}else{const raiz=raizDe(c);if(!respuestasPorRaiz.has(raiz.id))respuestasPorRaiz.set(raiz.id,[]);respuestasPorRaiz.get(raiz.id).push(c)}});raices.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));raices.forEach((r)=>{const hijos=respuestasPorRaiz.get(r.id)||[];hijos.sort((a,b)=>new Date(a.created_at)-new Date(b.created_at))});contenedor.innerHTML=raices.map((raiz)=>renderizarComentarioConRespuestasHTML(raiz,respuestasPorRaiz.get(raiz.id)||[],porId)).join("");actualizarNotificaciones()}catch(err){console.error("Error al cargar comentarios:",err);contenedor.innerHTML='<p style="color:var(--red-main);text-align:center;">No se pudieron cargar los comentarios.</p>'}}
+function cerrarRespuestaAbierta(){if(respuestaAbiertaId==null)return;const cajaAnterior=document.getElementById(`respuesta-caja-${respuestaAbiertaId}`);if(cajaAnterior){cajaAnterior.classList.remove("activa");cajaAnterior.innerHTML=""}
+respuestaAbiertaId=null}
+function abrirRespuesta(id,nombreAutor){id=String(id);if(respuestaAbiertaId===id){cerrarRespuestaAbierta();return}
+cerrarRespuestaAbierta();const caja=document.getElementById(`respuesta-caja-${id}`);if(!caja)return;respuestaAbiertaId=id;const previewAvatarEl=document.getElementById("avatar-preview");const miAvatar=(previewAvatarEl&&previewAvatarEl.src)||AVATAR_DEFAULT;const miNombreGuardado=obtenerMiNombre();caja.innerHTML=`
       <img src="${miAvatar}" alt="Tu avatar" onerror="this.src='${AVATAR_DEFAULT}'">
       <form class="form-respuesta" data-parent-id="${id}" data-autor-padre="${escaparHTML(nombreAutor || "")}">
         <div class="comentario-respuesta-input-wrap">
@@ -730,691 +117,80 @@ function abrirRespuesta(id, nombreAutor) {
           </div>
         </div>
       </form>
-    `;
-    caja.classList.add("activa");
-    requestAnimationFrame(() => {
-        const textarea = caja.querySelector(".comentario-respuesta-textarea");
-        if (textarea) textarea.focus();
-        caja.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    });
-}
-
-async function enviarRespuesta(form) {
-    const statusEl = form.querySelector(".respuesta-status");
-    if (!db) { if (statusEl) statusEl.textContent = "No se pudo conectar con la base de datos."; return; }
-    const parentId = form.dataset.parentId;
-    const autorPadre = form.dataset.autorPadre || "";
-    const nombreInput = form.querySelector(".comentario-respuesta-nombre");
-    const textarea = form.querySelector(".comentario-respuesta-textarea");
-    const btnEnviar = form.querySelector(".btn-respuesta-enviar");
-    const caja = form.closest(".comentario-respuesta-caja");
-    if (statusEl) statusEl.textContent = "";
-    const nombre = nombreInput.value.trim();
-    const mensaje = textarea.value.trim();
-    if (!nombre || !mensaje) return;
-    const imagenUrl = (caja && caja._imagenUrl) || null;
-    const gifUrl    = (caja && caja._gifUrl)    || null;
-    btnEnviar.disabled = true;
-    btnEnviar.textContent = "Enviando...";
-    try {
-        const avatar = avatarUrlSeleccionado || AVATAR_DEFAULT;
-        if (!(await nombreDisponible(nombre))) {
-            if (statusEl) statusEl.textContent = "Ese nombre ya está en uso. Elige otro.";
-            btnEnviar.disabled = false;
-            btnEnviar.textContent = "Responder";
-            return;
-        }
-        const emailActual = (document.getElementById("comment-email")?.value || "").trim();
-        guardarMiEmail(emailActual);
-        const { error } = await db.from("comentarios").insert([{
-            nombre, mensaje, avatar_url: avatar, parent_id: Number(parentId),
-            imagen_url: imagenUrl, gif_url: gifUrl, email: emailActual || null, user_id: MI_USER_ID
-        }]);
-        if (error) throw error;
-        guardarMiNombre(nombre);
-        if (autorPadre && autorPadre.trim().toLowerCase() !== nombre.toLowerCase()) {
-            try {
-                await db.from("notificaciones").insert([{
-                    destinatario_nombre: autorPadre, remitente_nombre: nombre,
-                    comentario_id: Number(parentId), mensaje_preview: mensaje.slice(0, 120)
-                }]);
-            } catch (errNotif) { console.error("Error al crear la notificación:", errNotif); }
-        }
-        try {
-            const { data: padreData } = await db.from("comentarios").select("email, nombre").eq("id", Number(parentId)).maybeSingle();
-            if (padreData && padreData.email) {
-                enviarCorreoRespuesta(padreData.email, padreData.nombre, nombre, mensaje, Number(parentId));
-            }
-        } catch (errCorreo) { console.warn("No se pudo obtener el email del padre:", errCorreo); }
-        pedirPermisoNotificaciones();
-        cerrarRespuestaAbierta();
-        await cargarComentarios();
-    } catch (err) {
-        console.error("Error al publicar la respuesta:", err);
-        if (statusEl) statusEl.textContent = "Error al responder. Inténtalo de nuevo.";
-        btnEnviar.disabled = false;
-        btnEnviar.textContent = "Responder";
-    }
-}
-
-let ultimaAccionLocal = 0;
-function marcarAccionLocal() { ultimaAccionLocal = Date.now(); }
-const VENTANA_IGNORAR_REALTIME_MS = 2500;
-
-function actualizarContadoresVisuales(comentarioId, deltaLike, deltaDislike) {
-    const tarjeta = document.querySelector(`.comentario-tarjeta[data-id="${comentarioId}"]`);
-    if (!tarjeta) return;
-    const contLike = tarjeta.querySelector(".btn-like .contador-voto");
-    const contDislike = tarjeta.querySelector(".btn-dislike .contador-voto");
-    if (contLike) contLike.textContent = String(Math.max(0, (Number(contLike.textContent) || 0) + deltaLike));
-    if (contDislike) contDislike.textContent = String(Math.max(0, (Number(contDislike.textContent) || 0) + deltaDislike));
-}
-
-async function votarComentario(comentarioId, tipo) {
-    if (!db) return;
-    const idNum = Number(comentarioId);
-    const votoActual = misVotos.get(idNum) || null;
-    let deltaLike = 0, deltaDislike = 0, nuevoVoto = null;
-    if (!votoActual) {
-        if (tipo === "like") deltaLike = 1; else deltaDislike = 1;
-        nuevoVoto = tipo;
-    } else if (votoActual === tipo) {
-        if (tipo === "like") deltaLike = -1; else deltaDislike = -1;
-        nuevoVoto = null;
-    } else {
-        if (tipo === "like") { deltaLike = 1; deltaDislike = -1; }
-        else { deltaLike = -1; deltaDislike = 1; }
-        nuevoVoto = tipo;
-    }
-    actualizarContadoresVisuales(idNum, deltaLike, deltaDislike);
-    if (nuevoVoto) misVotos.set(idNum, nuevoVoto);
-    else misVotos.delete(idNum);
-    marcarAccionLocal();
-    try {
-        if (votoActual === tipo) {
-            const { error } = await db.from("votos").delete().eq("comentario_id", idNum).eq("user_id", MI_USER_ID);
-            if (error) throw error;
-        } else if (!votoActual) {
-            const { error } = await db.from("votos").insert([{ comentario_id: idNum, user_id: MI_USER_ID, tipo }]);
-            if (error) throw error;
-        } else {
-            const { error } = await db.from("votos").update({ tipo }).eq("comentario_id", idNum).eq("user_id", MI_USER_ID);
-            if (error) throw error;
-        }
-        marcarAccionLocal();
-    } catch (err) {
-        console.error("Error al votar, revirtiendo:", err);
-        actualizarContadoresVisuales(idNum, -deltaLike, -deltaDislike);
-        if (votoActual) misVotos.set(idNum, votoActual);
-        else misVotos.delete(idNum);
-    }
-}
-
-async function recolectarDescendientes(idRaiz) {
-    if (!db) return [];
-    try {
-        const { data: todos, error } = await db.from("comentarios").select("id, parent_id, imagen_url, gif_url");
-        if (error || !todos) return [];
-        const porPadre = new Map();
-        todos.forEach((c) => {
-            if (c.parent_id == null) return;
-            if (!porPadre.has(c.parent_id)) porPadre.set(c.parent_id, []);
-            porPadre.get(c.parent_id).push(c);
-        });
-        const resultado = [];
-        const pila = [idRaiz];
-        while (pila.length) {
-            const actual = pila.pop();
-            const hijos = porPadre.get(actual) || [];
-            for (const h of hijos) { resultado.push(h); pila.push(h.id); }
-        }
-        return resultado;
-    } catch (err) {
-        console.warn("No se pudieron recolectar descendientes:", err);
-        return [];
-    }
-}
-
-function extraerPathComentario(url) {
-    if (!url) return null;
-    const p = url.split("/comentarios/")[1];
-    return p ? p.split("?")[0] : null;
-}
-
-async function borrarComentario(comentarioId) {
-    if (!db) return;
-    if (!confirm("¿Seguro que quieres borrar este comentario? Se borrarán también sus respuestas.")) return;
-    const idNum = Number(comentarioId);
-    const wrap = document.querySelector(`.comentario-swipe-wrap[data-id="${idNum}"]`);
-    let parentIdRespuesta = null;
-    if (wrap) {
-        const listaAncestro = wrap.closest(".comentario-respuestas-lista");
-        if (listaAncestro && listaAncestro.id && listaAncestro.id.startsWith("respuestas-")) {
-            parentIdRespuesta = listaAncestro.id.replace("respuestas-", "");
-        }
-    }
-    let descendientes = [];
-    let pathsAEliminar = [];
-    try {
-        const { data: raiz } = await db.from("comentarios").select("imagen_url, gif_url").eq("id", idNum).maybeSingle();
-        const urls = [];
-        if (raiz) {
-            if (raiz.imagen_url) urls.push(raiz.imagen_url);
-            if (raiz.gif_url) urls.push(raiz.gif_url);
-        }
-        descendientes = await recolectarDescendientes(idNum);
-        descendientes.forEach((c) => {
-            if (c.imagen_url) urls.push(c.imagen_url);
-            if (c.gif_url) urls.push(c.gif_url);
-        });
-        pathsAEliminar = urls.map(extraerPathComentario).filter(Boolean);
-    } catch (err) { console.warn("No se pudieron listar los archivos a borrar:", err); }
-    const idsAEliminar = [idNum, ...descendientes.map((d) => d.id)];
-    idsAEliminar.forEach((id) => {
-        const w = document.querySelector(`.comentario-swipe-wrap[data-id="${id}"]`);
-        if (!w) return;
-        w.style.transition = "opacity 0.18s ease, transform 0.18s ease";
-        w.style.opacity = "0";
-        w.style.transform = "translateX(-24px)";
-        setTimeout(() => { if (w.parentNode) w.remove(); }, 180);
-    });
-    const btnVer = document.querySelector(`.btn-ver-respuestas[data-target="respuestas-${idNum}"]`);
-    if (btnVer) { btnVer.style.opacity = "0"; setTimeout(() => { if (btnVer.parentNode) btnVer.remove(); }, 180); }
-    const listaRespuestas = document.getElementById(`respuestas-${idNum}`);
-    if (listaRespuestas) { listaRespuestas.style.opacity = "0"; setTimeout(() => { if (listaRespuestas.parentNode) listaRespuestas.remove(); }, 180); }
-    marcarAccionLocal();
-    try {
-        const { error } = await db.from("comentarios").delete().eq("id", idNum);
-        if (error) throw error;
-        marcarAccionLocal();
-        if (parentIdRespuesta) setTimeout(() => recalcularContadorRespuestas(parentIdRespuesta, idNum), 240);
-        if (pathsAEliminar.length > 0) {
-            db.storage.from("comentarios").remove(pathsAEliminar).then(({ error: rmErr }) => {
-                if (rmErr) console.warn("No se pudieron borrar algunos archivos:", rmErr);
-            });
-        }
-    } catch (err) {
-        console.error("Error al borrar comentario:", err);
-        alert("No se pudo borrar el comentario.");
-        await cargarComentarios();
-    }
-}
-
-async function subirGifAStorage(file) { return await subirArchivoStorage(STORAGE_BUCKET_COMENTARIOS, file); }
-
-async function subirConProgreso(file, statusEl, funcionSubida, etiqueta = "Subiendo archivo") {
-    if (!statusEl) return await funcionSubida(file);
-    const colorOriginal = statusEl.style.color;
-    statusEl.style.color = "var(--text-muted)";
-    statusEl.textContent = `${etiqueta}... 0%`;
-    let porcentaje = 0, detenido = false;
-    const intervalo = setInterval(() => {
-        if (detenido) return;
-        const mb = file.size / 1024 / 1024;
-        const incremento = mb < 0.3 ? 8 : mb < 0.7 ? 6 : mb < 1.5 ? 4 : 3;
-        porcentaje = Math.min(90, porcentaje + incremento);
-        statusEl.textContent = `${etiqueta}... ${Math.round(porcentaje)}%`;
-    }, 200);
-    try {
-        const url = await funcionSubida(file);
-        detenido = true;
-        clearInterval(intervalo);
-        statusEl.textContent = `${etiqueta}... 100%`;
-        return url;
-    } catch (err) {
-        detenido = true;
-        clearInterval(intervalo);
-        statusEl.textContent = "";
-        statusEl.style.color = colorOriginal;
-        throw err;
-    }
-}
-
-function configurarDelegacionComentarios(contenedor) {
-    contenedor.addEventListener("click", (e) => {
-        const btnVerRespuestas = e.target.closest(".btn-ver-respuestas");
-        const videoEl = e.target.closest(".video-reproducible");
-        if (videoEl) {
-            document.querySelectorAll(".video-reproducible").forEach((v) => {
-                if (v !== videoEl && !v.paused) {
-                    v.pause();
-                    const w = v.closest(".video-wrap");
-                    if (w) w.dataset.paused = "true";
-                }
-            });
-            if (videoEl.paused) videoEl.play().catch(() => {});
-            else videoEl.pause();
-            return;
-        }
-        if (btnVerRespuestas) {
-            const targetId = btnVerRespuestas.dataset.target;
-            const lista = document.getElementById(targetId);
-            if (lista) {
-                const visible = lista.style.display !== "none";
-                lista.style.display = visible ? "none" : "flex";
-                btnVerRespuestas.classList.toggle("activo", !visible);
-                const span = btnVerRespuestas.querySelector(".texto-ver-respuestas");
-                if (span) span.textContent = visible ? btnVerRespuestas.dataset.textoVer : "Ocultar respuestas";
-            }
-            return;
-        }
-        const btnResponder = e.target.closest(".btn-responder-texto");
-        if (btnResponder) { abrirRespuesta(btnResponder.dataset.id, btnResponder.dataset.nombre); return; }
-        const btnCancelar = e.target.closest(".btn-respuesta-cancelar");
-        if (btnCancelar) { cerrarRespuestaAbierta(); return; }
-        const btnQuitarImg = e.target.closest(".btn-quitar-imagen");
-        if (btnQuitarImg) {
-            const caja = btnQuitarImg.closest(".comentario-respuesta-caja");
-            if (caja) {
-                if (btnQuitarImg.closest(".comentario-gif-respuesta-wrap")) {
-                    caja._gifUrl = null;
-                    const prevWrap = caja.querySelector(".comentario-gif-respuesta-wrap");
-                    if (prevWrap) prevWrap.classList.remove("activa");
-                    const inputFile = caja.querySelector(".input-gif-respuesta");
-                    if (inputFile) inputFile.value = "";
-                } else {
-                    caja._imagenUrl = null;
-                    const prevWrap = caja.querySelector(".comentario-imagen-respuesta-wrap");
-                    if (prevWrap) prevWrap.classList.remove("activa");
-                    const inputFile = caja.querySelector(".input-imagen-respuesta");
-                    if (inputFile) inputFile.value = "";
-                }
-            }
-            return;
-        }
-        const btnLike = e.target.closest(".btn-like");
-        if (btnLike) { votarComentario(btnLike.dataset.id, "like"); return; }
-        const btnDislike = e.target.closest(".btn-dislike");
-        if (btnDislike) { votarComentario(btnDislike.dataset.id, "dislike"); return; }
-        const btnBorrar = e.target.closest(".btn-borrar-comentario");
-        if (btnBorrar) { borrarComentario(btnBorrar.dataset.id); return; }
-    });
-
-    contenedor.addEventListener("change", async (e) => {
-        const inputImg = e.target.closest(".input-imagen-respuesta");
-        if (inputImg) {
-            const file = inputImg.files[0];
-            if (!file) return;
-            if (file.size > MAX_IMAGEN_BYTES) { alert(`Máximo ${(MAX_IMAGEN_BYTES / 1024 / 1024).toFixed(1)} MB`); inputImg.value = ""; return; }
-            const caja = inputImg.closest(".comentario-respuesta-caja");
-            const statusEl = caja && caja.querySelector(".respuesta-status");
-            try {
-                const url = await subirConProgreso(file, statusEl, subirImagenComentarioAStorage, "Subiendo imagen");
-                if (!url) throw new Error("No se pudo subir la imagen");
-                if (caja) caja._imagenUrl = url;
-                const previewImg = caja && caja.querySelector(".comentario-imagen-respuesta-wrap .comentario-imagen-preview");
-                const previewWrap = caja && caja.querySelector(".comentario-imagen-respuesta-wrap");
-                if (previewImg) previewImg.src = url;
-                if (previewWrap) previewWrap.classList.add("activa");
-                if (statusEl) {
-                    statusEl.textContent = "Imagen lista ✓";
-                    statusEl.style.color = "#0f9d58";
-                    setTimeout(() => { if (statusEl.textContent === "Imagen lista ✓") statusEl.textContent = ""; }, 2000);
-                }
-            } catch (err) { console.error("Error al procesar imagen de respuesta:", err); alert("No se pudo subir la imagen."); }
-            return;
-        }
-        const inputGifResp = e.target.closest(".input-gif-respuesta");
-        if (inputGifResp) {
-            const file = inputGifResp.files[0];
-            if (!file) return;
-            const tiposOk = ["image/gif", "video/webm", "video/mp4"];
-            if (!tiposOk.includes(file.type)) { alert("Solo se permiten archivos GIF, WebM o MP4."); inputGifResp.value = ""; return; }
-            if (file.size > MAX_GIF_BYTES) { alert(`Máximo ${(MAX_GIF_BYTES / 1024 / 1024).toFixed(1)} MB`); inputGifResp.value = ""; return; }
-            const caja = inputGifResp.closest(".comentario-respuesta-caja");
-            const statusEl = caja && caja.querySelector(".respuesta-status");
-            try {
-                const url = await subirConProgreso(file, statusEl, subirGifAStorage, "Subiendo GIF");
-                if (!url) throw new Error("No se pudo subir el GIF");
-                if (caja) caja._gifUrl = url;
-                const previewWrap  = caja && caja.querySelector(".comentario-gif-respuesta-wrap");
-                const previewImg   = previewWrap && previewWrap.querySelector(".comentario-gif-respuesta-img");
-                const previewVideo = previewWrap && previewWrap.querySelector(".comentario-gif-respuesta-video");
-                const esVideo = file.type.startsWith("video/");
-                if (esVideo) {
-                    if (previewVideo) { previewVideo.src = url; previewVideo.style.display = "block"; }
-                    if (previewImg) { previewImg.src = ""; previewImg.style.display = "none"; }
-                } else {
-                    if (previewImg) { previewImg.src = url; previewImg.style.display = "block"; }
-                    if (previewVideo) { previewVideo.src = ""; previewVideo.style.display = "none"; }
-                }
-                if (previewWrap) previewWrap.classList.add("activa");
-                if (statusEl) {
-                    statusEl.textContent = file.type === "image/gif" ? "GIF subido. Convirtiendo a WebM..." : "GIF listo ✓";
-                    statusEl.style.color = "#0f9d58";
-                    setTimeout(() => { if (statusEl.textContent.startsWith("GIF") || statusEl.textContent.startsWith("Subido")) statusEl.textContent = ""; }, 3000);
-                }
-            } catch (err) { console.error("Error al procesar GIF de respuesta:", err); alert("No se pudo subir el GIF."); }
-            return;
-        }
-        const inputVideoResp = e.target.closest(".input-video-respuesta");
-        if (inputVideoResp) {
-            const file = inputVideoResp.files[0];
-            if (!file) return;
-            const tiposOk = ["video/mp4", "video/webm"];
-            if (!tiposOk.includes(file.type)) { alert("Solo se permiten videos MP4 o WebM."); inputVideoResp.value = ""; return; }
-            if (file.size > MAX_VIDEO_BYTES) { alert(`Máximo ${(MAX_VIDEO_BYTES / 1024 / 1024).toFixed(0)} MB`); inputVideoResp.value = ""; return; }
-            const caja = inputVideoResp.closest(".comentario-respuesta-caja");
-            const statusEl = caja && caja.querySelector(".respuesta-status");
-            try {
-                const url = await subirConProgreso(file, statusEl, subirGifAStorage, "Subiendo video");
-                if (!url) throw new Error("No se pudo subir el video");
-                if (caja) caja._gifUrl = url;
-                const previewWrap  = caja && caja.querySelector(".comentario-gif-respuesta-wrap");
-                const previewImg   = previewWrap && previewWrap.querySelector(".comentario-gif-respuesta-img");
-                const previewVideo = previewWrap && previewWrap.querySelector(".comentario-gif-respuesta-video");
-                if (previewVideo) { previewVideo.src = url; previewVideo.style.display = "block"; }
-                if (previewImg) { previewImg.src = ""; previewImg.style.display = "none"; }
-                if (previewWrap) previewWrap.classList.add("activa");
-                const inputGifResp2 = caja && caja.querySelector(".input-gif-respuesta");
-                if (inputGifResp2) inputGifResp2.value = "";
-                if (statusEl) {
-                    statusEl.textContent = "Video listo ✓";
-                    statusEl.style.color = "#0f9d58";
-                    setTimeout(() => { if (statusEl.textContent === "Video listo ✓") statusEl.textContent = ""; }, 2000);
-                }
-            } catch (err) { console.error("Error al subir video de respuesta:", err); alert("No se pudo subir el video."); }
-            return;
-        }
-    });
-
-    contenedor.addEventListener("submit", (e) => {
-        const form = e.target.closest(".form-respuesta");
-        if (!form) return;
-        e.preventDefault();
-        enviarRespuesta(form);
-    });
-
-    let draggingTarjeta = null, startX = 0, dragged = 0;
-    const UMBRAL = 46, MAX_ARRASTRE = 74;
-
-    contenedor.addEventListener("pointerdown", (e) => {
-        if (e.pointerType === "mouse" && e.button !== 0) return;
-        const tarjeta = e.target.closest(".comentario-tarjeta");
-        if (!tarjeta) return;
-        if (e.target.closest("a, button, label, input, textarea, video, .video-wrap")) return;
-        draggingTarjeta = tarjeta;
-        startX = e.clientX;
-        dragged = 0;
-        tarjeta.classList.add("arrastrando");
-        try { tarjeta.setPointerCapture(e.pointerId); } catch (err) {}
-    });
-
-    contenedor.addEventListener("pointermove", (e) => {
-        if (!draggingTarjeta) return;
-        const delta = e.clientX - startX;
-        const icono = draggingTarjeta.parentElement.querySelector(".comentario-swipe-icon");
-        if (delta <= 0) {
-            dragged = 0;
-            draggingTarjeta.style.transform = "translateX(0px)";
-            if (icono) icono.style.opacity = "0";
-            return;
-        }
-        dragged = Math.min(delta, MAX_ARRASTRE);
-        draggingTarjeta.style.transform = `translateX(${dragged}px)`;
-        if (icono) icono.style.opacity = String(Math.min(dragged / UMBRAL, 1));
-    });
-
-    function finalizarArrastre() {
-        if (!draggingTarjeta) return;
-        const tarjeta = draggingTarjeta;
-        tarjeta.classList.remove("arrastrando");
-        tarjeta.style.transform = "translateX(0px)";
-        const icono = tarjeta.parentElement.querySelector(".comentario-swipe-icon");
-        if (icono) icono.style.opacity = "0";
-        if (dragged >= UMBRAL) abrirRespuesta(tarjeta.dataset.id, tarjeta.dataset.nombre);
-        draggingTarjeta = null;
-        dragged = 0;
-    }
-    contenedor.addEventListener("pointerup", finalizarArrastre);
-    contenedor.addEventListener("pointercancel", finalizarArrastre);
-}
-
-// ==========================================
-// NOTIFICACIONES
-// ==========================================
-const INTERVALO_NOTIFICACIONES_MS = 30000;
-const TITULO_ORIGINAL = document.title;
-let idsNotificacionesVistas = null;
-
-function pedirPermisoNotificaciones() {
-    if ("Notification" in window && Notification.permission === "default") {
-        Notification.requestPermission().catch(() => {});
-    }
-}
-
-function mostrarAvisoNotificacion(n) {
-    const toast = document.createElement("div");
-    toast.className = "toast-notificacion";
-    toast.setAttribute("role", "status");
-    toast.innerHTML = `<strong>${escaparHTML(n.remitente_nombre)}</strong> respondió a tu comentario: "${escaparHTML((n.mensaje_preview || "").slice(0, 60))}"`;
-    toast.addEventListener("click", () => {
-        const tab5 = document.getElementById("tab5");
-        if (tab5) tab5.checked = true;
-        toast.remove();
-        marcarNotificacionLeida(n.id, n.comentario_id);
-    });
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 8000);
-    if ("Notification" in window && Notification.permission === "granted" && document.hidden) {
-        try { new Notification("Enlaces Pobrecraft", { body: `${n.remitente_nombre} respondió: ${(n.mensaje_preview || "").slice(0, 80)}`, icon: "img/icon.webp" }); } catch (err) {}
-    }
-}
-
-function detectarNotificacionesNuevas(lista) {
-    const idsActuales = new Set(lista.map((n) => n.id));
-    if (idsNotificacionesVistas) {
-        lista.filter((n) => !idsNotificacionesVistas.has(n.id)).forEach(mostrarAvisoNotificacion);
-    }
-    idsNotificacionesVistas = idsActuales;
-    document.title = lista.length > 0 ? `(${lista.length}) ${TITULO_ORIGINAL}` : TITULO_ORIGINAL;
-}
-
-async function actualizarNotificaciones() {
-    const btn = document.getElementById("btn-notificaciones");
-    const badge = document.getElementById("badge-notificaciones");
-    if (!btn || !badge || !db) return;
-    const miNombre = obtenerMiNombre();
-    if (!miNombre) { btn.style.display = "none"; return; }
-    btn.style.display = "flex";
-    try {
-        const { data, error } = await db.from("notificaciones").select("*").ilike("destinatario_nombre", miNombre).eq("leido", false).order("created_at", { ascending: false }).limit(30);
-        if (error) throw error;
-        window._notificacionesActuales = data || [];
-        detectarNotificacionesNuevas(window._notificacionesActuales);
-        const cantidad = window._notificacionesActuales.length;
-        if (cantidad > 0) {
-            badge.textContent = cantidad > 9 ? "9+" : String(cantidad);
-            badge.style.display = "flex";
-        } else {
-            badge.style.display = "none";
-        }
-    } catch (err) { console.error("Error al comprobar notificaciones:", err); }
-}
-
-function renderizarPanelNotificaciones() {
-    const panel = document.getElementById("panel-notificaciones");
-    if (!panel) return;
-    const lista = window._notificacionesActuales || [];
-    if (lista.length === 0) {
-        panel.innerHTML = '<p class="notificacion-vacia">No tienes notificaciones nuevas</p>';
-        return;
-    }
-    panel.innerHTML = lista.map((n) => `
+    `;caja.classList.add("activa");requestAnimationFrame(()=>{const textarea=caja.querySelector(".comentario-respuesta-textarea");if(textarea)textarea.focus();caja.scrollIntoView({behavior:"smooth",block:"nearest"})})}
+async function enviarRespuesta(form){const statusEl=form.querySelector(".respuesta-status");if(!db){if(statusEl)statusEl.textContent="No se pudo conectar con la base de datos.";return}
+const parentId=form.dataset.parentId;const autorPadre=form.dataset.autorPadre||"";const nombreInput=form.querySelector(".comentario-respuesta-nombre");const textarea=form.querySelector(".comentario-respuesta-textarea");const btnEnviar=form.querySelector(".btn-respuesta-enviar");const caja=form.closest(".comentario-respuesta-caja");if(statusEl)statusEl.textContent="";const nombre=nombreInput.value.trim();const mensaje=textarea.value.trim();if(!nombre||!mensaje)return;const imagenUrl=(caja&&caja._imagenUrl)||null;const gifUrl=(caja&&caja._gifUrl)||null;btnEnviar.disabled=!0;btnEnviar.textContent="Enviando...";try{const avatar=avatarUrlSeleccionado||AVATAR_DEFAULT;if(!(await nombreDisponible(nombre))){if(statusEl)statusEl.textContent="Ese nombre ya está en uso. Elige otro.";btnEnviar.disabled=!1;btnEnviar.textContent="Responder";return}
+const emailActual=(document.getElementById("comment-email")?.value||"").trim();guardarMiEmail(emailActual);const{error}=await db.from("comentarios").insert([{nombre,mensaje,avatar_url:avatar,parent_id:Number(parentId),imagen_url:imagenUrl,gif_url:gifUrl,email:emailActual||null,user_id:MI_USER_ID}]);if(error)throw error;guardarMiNombre(nombre);if(autorPadre&&autorPadre.trim().toLowerCase()!==nombre.toLowerCase()){try{await db.from("notificaciones").insert([{destinatario_nombre:autorPadre,remitente_nombre:nombre,comentario_id:Number(parentId),mensaje_preview:mensaje.slice(0,120)}])}catch(errNotif){console.error("Error al crear la notificación:",errNotif)}}
+try{const{data:padreData}=await db.from("comentarios").select("email, nombre").eq("id",Number(parentId)).maybeSingle();if(padreData&&padreData.email){enviarCorreoRespuesta(padreData.email,padreData.nombre,nombre,mensaje,Number(parentId))}}catch(errCorreo){console.warn("No se pudo obtener el email del padre:",errCorreo)}
+pedirPermisoNotificaciones();cerrarRespuestaAbierta();await cargarComentarios()}catch(err){console.error("Error al publicar la respuesta:",err);if(statusEl)statusEl.textContent="Error al responder. Inténtalo de nuevo.";btnEnviar.disabled=!1;btnEnviar.textContent="Responder"}}
+let ultimaAccionLocal=0;function marcarAccionLocal(){ultimaAccionLocal=Date.now()}
+const VENTANA_IGNORAR_REALTIME_MS=2500;function actualizarContadoresVisuales(comentarioId,deltaLike,deltaDislike){const tarjeta=document.querySelector(`.comentario-tarjeta[data-id="${comentarioId}"]`);if(!tarjeta)return;const contLike=tarjeta.querySelector(".btn-like .contador-voto");const contDislike=tarjeta.querySelector(".btn-dislike .contador-voto");if(contLike)contLike.textContent=String(Math.max(0,(Number(contLike.textContent)||0)+deltaLike));if(contDislike)contDislike.textContent=String(Math.max(0,(Number(contDislike.textContent)||0)+deltaDislike));}
+async function votarComentario(comentarioId,tipo){if(!db)return;const idNum=Number(comentarioId);const votoActual=misVotos.get(idNum)||null;let deltaLike=0,deltaDislike=0,nuevoVoto=null;if(!votoActual){if(tipo==="like")deltaLike=1;else deltaDislike=1;nuevoVoto=tipo}else if(votoActual===tipo){if(tipo==="like")deltaLike=-1;else deltaDislike=-1;nuevoVoto=null}else{if(tipo==="like"){deltaLike=1;deltaDislike=-1}else{deltaLike=-1;deltaDislike=1}
+nuevoVoto=tipo}
+actualizarContadoresVisuales(idNum,deltaLike,deltaDislike);if(nuevoVoto)misVotos.set(idNum,nuevoVoto);else misVotos.delete(idNum);marcarAccionLocal();try{if(votoActual===tipo){const{error}=await db.from("votos").delete().eq("comentario_id",idNum).eq("user_id",MI_USER_ID);if(error)throw error}else if(!votoActual){const{error}=await db.from("votos").insert([{comentario_id:idNum,user_id:MI_USER_ID,tipo}]);if(error)throw error}else{const{error}=await db.from("votos").update({tipo}).eq("comentario_id",idNum).eq("user_id",MI_USER_ID);if(error)throw error}
+marcarAccionLocal()}catch(err){console.error("Error al votar, revirtiendo:",err);actualizarContadoresVisuales(idNum,-deltaLike,-deltaDislike);if(votoActual)misVotos.set(idNum,votoActual);else misVotos.delete(idNum)}}
+async function recolectarDescendientes(idRaiz){if(!db)return[];try{const{data:todos,error}=await db.from("comentarios").select("id, parent_id, imagen_url, gif_url");if(error||!todos)return[];const porPadre=new Map();todos.forEach((c)=>{if(c.parent_id==null)return;if(!porPadre.has(c.parent_id))porPadre.set(c.parent_id,[]);porPadre.get(c.parent_id).push(c)});const resultado=[];const pila=[idRaiz];while(pila.length){const actual=pila.pop();const hijos=porPadre.get(actual)||[];for(const h of hijos){resultado.push(h);pila.push(h.id)}}
+return resultado}catch(err){console.warn("No se pudieron recolectar descendientes:",err);return[]}}
+function extraerPathComentario(url){if(!url)return null;const p=url.split("/comentarios/")[1];return p?p.split("?")[0]:null}
+async function borrarComentario(comentarioId){if(!db)return;if(!confirm("¿Seguro que quieres borrar este comentario? Se borrarán también sus respuestas."))return;const idNum=Number(comentarioId);const wrap=document.querySelector(`.comentario-swipe-wrap[data-id="${idNum}"]`);let parentIdRespuesta=null;if(wrap){const listaAncestro=wrap.closest(".comentario-respuestas-lista");if(listaAncestro&&listaAncestro.id&&listaAncestro.id.startsWith("respuestas-")){parentIdRespuesta=listaAncestro.id.replace("respuestas-","")}}
+let descendientes=[];let pathsAEliminar=[];try{const{data:raiz}=await db.from("comentarios").select("imagen_url, gif_url").eq("id",idNum).maybeSingle();const urls=[];if(raiz){if(raiz.imagen_url)urls.push(raiz.imagen_url);if(raiz.gif_url)urls.push(raiz.gif_url);}
+descendientes=await recolectarDescendientes(idNum);descendientes.forEach((c)=>{if(c.imagen_url)urls.push(c.imagen_url);if(c.gif_url)urls.push(c.gif_url);});pathsAEliminar=urls.map(extraerPathComentario).filter(Boolean)}catch(err){console.warn("No se pudieron listar los archivos a borrar:",err)}
+const idsAEliminar=[idNum,...descendientes.map((d)=>d.id)];idsAEliminar.forEach((id)=>{const w=document.querySelector(`.comentario-swipe-wrap[data-id="${id}"]`);if(!w)return;w.style.transition="opacity 0.18s ease, transform 0.18s ease";w.style.opacity="0";w.style.transform="translateX(-24px)";setTimeout(()=>{if(w.parentNode)w.remove();},180)});const btnVer=document.querySelector(`.btn-ver-respuestas[data-target="respuestas-${idNum}"]`);if(btnVer){btnVer.style.opacity="0";setTimeout(()=>{if(btnVer.parentNode)btnVer.remove();},180)}
+const listaRespuestas=document.getElementById(`respuestas-${idNum}`);if(listaRespuestas){listaRespuestas.style.opacity="0";setTimeout(()=>{if(listaRespuestas.parentNode)listaRespuestas.remove();},180)}
+marcarAccionLocal();try{const{error}=await db.from("comentarios").delete().eq("id",idNum);if(error)throw error;marcarAccionLocal();if(parentIdRespuesta)setTimeout(()=>recalcularContadorRespuestas(parentIdRespuesta,idNum),240);if(pathsAEliminar.length>0){db.storage.from("comentarios").remove(pathsAEliminar).then(({error:rmErr})=>{if(rmErr)console.warn("No se pudieron borrar algunos archivos:",rmErr);})}}catch(err){console.error("Error al borrar comentario:",err);alert("No se pudo borrar el comentario.");await cargarComentarios()}}
+async function subirGifAStorage(file){return await subirArchivoStorage(STORAGE_BUCKET_COMENTARIOS,file)}
+async function subirConProgreso(file,statusEl,funcionSubida,etiqueta="Subiendo archivo"){if(!statusEl)return await funcionSubida(file);const colorOriginal=statusEl.style.color;statusEl.style.color="var(--text-muted)";statusEl.textContent=`${etiqueta}... 0%`;let porcentaje=0,detenido=!1;const intervalo=setInterval(()=>{if(detenido)return;const mb=file.size/1024/1024;const incremento=mb<0.3?8:mb<0.7?6:mb<1.5?4:3;porcentaje=Math.min(90,porcentaje+incremento);statusEl.textContent=`${etiqueta}... ${Math.round(porcentaje)}%`},200);try{const url=await funcionSubida(file);detenido=!0;clearInterval(intervalo);statusEl.textContent=`${etiqueta}... 100%`;return url}catch(err){detenido=!0;clearInterval(intervalo);statusEl.textContent="";statusEl.style.color=colorOriginal;throw err}}
+function configurarDelegacionComentarios(contenedor){contenedor.addEventListener("click",(e)=>{const btnVerRespuestas=e.target.closest(".btn-ver-respuestas");const videoEl=e.target.closest(".video-reproducible");if(videoEl){document.querySelectorAll(".video-reproducible").forEach((v)=>{if(v!==videoEl&&!v.paused){v.pause();const w=v.closest(".video-wrap");if(w)w.dataset.paused="true"}});if(videoEl.paused)videoEl.play().catch(()=>{});else videoEl.pause();return}
+if(btnVerRespuestas){const targetId=btnVerRespuestas.dataset.target;const lista=document.getElementById(targetId);if(lista){const visible=lista.style.display!=="none";lista.style.display=visible?"none":"flex";btnVerRespuestas.classList.toggle("activo",!visible);const span=btnVerRespuestas.querySelector(".texto-ver-respuestas");if(span)span.textContent=visible?btnVerRespuestas.dataset.textoVer:"Ocultar respuestas"}
+return}
+const btnResponder=e.target.closest(".btn-responder-texto");if(btnResponder){abrirRespuesta(btnResponder.dataset.id,btnResponder.dataset.nombre);return}
+const btnCancelar=e.target.closest(".btn-respuesta-cancelar");if(btnCancelar){cerrarRespuestaAbierta();return}
+const btnQuitarImg=e.target.closest(".btn-quitar-imagen");if(btnQuitarImg){const caja=btnQuitarImg.closest(".comentario-respuesta-caja");if(caja){if(btnQuitarImg.closest(".comentario-gif-respuesta-wrap")){caja._gifUrl=null;const prevWrap=caja.querySelector(".comentario-gif-respuesta-wrap");if(prevWrap)prevWrap.classList.remove("activa");const inputFile=caja.querySelector(".input-gif-respuesta");if(inputFile)inputFile.value=""}else{caja._imagenUrl=null;const prevWrap=caja.querySelector(".comentario-imagen-respuesta-wrap");if(prevWrap)prevWrap.classList.remove("activa");const inputFile=caja.querySelector(".input-imagen-respuesta");if(inputFile)inputFile.value=""}}
+return}
+const btnLike=e.target.closest(".btn-like");if(btnLike){votarComentario(btnLike.dataset.id,"like");return}
+const btnDislike=e.target.closest(".btn-dislike");if(btnDislike){votarComentario(btnDislike.dataset.id,"dislike");return}
+const btnBorrar=e.target.closest(".btn-borrar-comentario");if(btnBorrar){borrarComentario(btnBorrar.dataset.id);return}});contenedor.addEventListener("change",async(e)=>{const inputImg=e.target.closest(".input-imagen-respuesta");if(inputImg){const file=inputImg.files[0];if(!file)return;if(file.size>MAX_IMAGEN_BYTES){alert(`Máximo ${(MAX_IMAGEN_BYTES / 1024 / 1024).toFixed(1)} MB`);inputImg.value="";return}
+const caja=inputImg.closest(".comentario-respuesta-caja");const statusEl=caja&&caja.querySelector(".respuesta-status");try{const url=await subirConProgreso(file,statusEl,subirImagenComentarioAStorage,"Subiendo imagen");if(!url)throw new Error("No se pudo subir la imagen");if(caja)caja._imagenUrl=url;const previewImg=caja&&caja.querySelector(".comentario-imagen-respuesta-wrap .comentario-imagen-preview");const previewWrap=caja&&caja.querySelector(".comentario-imagen-respuesta-wrap");if(previewImg)previewImg.src=url;if(previewWrap)previewWrap.classList.add("activa");if(statusEl){statusEl.textContent="Imagen lista ✓";statusEl.style.color="#0f9d58";setTimeout(()=>{if(statusEl.textContent==="Imagen lista ✓")statusEl.textContent=""},2000)}}catch(err){console.error("Error al procesar imagen de respuesta:",err);alert("No se pudo subir la imagen.")}
+return}
+const inputGifResp=e.target.closest(".input-gif-respuesta");if(inputGifResp){const file=inputGifResp.files[0];if(!file)return;const tiposOk=["image/gif","video/webm","video/mp4"];if(!tiposOk.includes(file.type)){alert("Solo se permiten archivos GIF, WebM o MP4.");inputGifResp.value="";return}
+if(file.size>MAX_GIF_BYTES){alert(`Máximo ${(MAX_GIF_BYTES / 1024 / 1024).toFixed(1)} MB`);inputGifResp.value="";return}
+const caja=inputGifResp.closest(".comentario-respuesta-caja");const statusEl=caja&&caja.querySelector(".respuesta-status");try{const url=await subirConProgreso(file,statusEl,subirGifAStorage,"Subiendo GIF");if(!url)throw new Error("No se pudo subir el GIF");if(caja)caja._gifUrl=url;const previewWrap=caja&&caja.querySelector(".comentario-gif-respuesta-wrap");const previewImg=previewWrap&&previewWrap.querySelector(".comentario-gif-respuesta-img");const previewVideo=previewWrap&&previewWrap.querySelector(".comentario-gif-respuesta-video");const esVideo=file.type.startsWith("video/");if(esVideo){if(previewVideo){previewVideo.src=url;previewVideo.style.display="block"}
+if(previewImg){previewImg.src="";previewImg.style.display="none"}}else{if(previewImg){previewImg.src=url;previewImg.style.display="block"}
+if(previewVideo){previewVideo.src="";previewVideo.style.display="none"}}
+if(previewWrap)previewWrap.classList.add("activa");if(statusEl){statusEl.textContent=file.type==="image/gif"?"GIF subido. Convirtiendo a WebM...":"GIF listo ✓";statusEl.style.color="#0f9d58";setTimeout(()=>{if(statusEl.textContent.startsWith("GIF")||statusEl.textContent.startsWith("Subido"))statusEl.textContent=""},3000)}}catch(err){console.error("Error al procesar GIF de respuesta:",err);alert("No se pudo subir el GIF.")}
+return}
+const inputVideoResp=e.target.closest(".input-video-respuesta");if(inputVideoResp){const file=inputVideoResp.files[0];if(!file)return;const tiposOk=["video/mp4","video/webm"];if(!tiposOk.includes(file.type)){alert("Solo se permiten videos MP4 o WebM.");inputVideoResp.value="";return}
+if(file.size>MAX_VIDEO_BYTES){alert(`Máximo ${(MAX_VIDEO_BYTES / 1024 / 1024).toFixed(0)} MB`);inputVideoResp.value="";return}
+const caja=inputVideoResp.closest(".comentario-respuesta-caja");const statusEl=caja&&caja.querySelector(".respuesta-status");try{const url=await subirConProgreso(file,statusEl,subirGifAStorage,"Subiendo video");if(!url)throw new Error("No se pudo subir el video");if(caja)caja._gifUrl=url;const previewWrap=caja&&caja.querySelector(".comentario-gif-respuesta-wrap");const previewImg=previewWrap&&previewWrap.querySelector(".comentario-gif-respuesta-img");const previewVideo=previewWrap&&previewWrap.querySelector(".comentario-gif-respuesta-video");if(previewVideo){previewVideo.src=url;previewVideo.style.display="block"}
+if(previewImg){previewImg.src="";previewImg.style.display="none"}
+if(previewWrap)previewWrap.classList.add("activa");const inputGifResp2=caja&&caja.querySelector(".input-gif-respuesta");if(inputGifResp2)inputGifResp2.value="";if(statusEl){statusEl.textContent="Video listo ✓";statusEl.style.color="#0f9d58";setTimeout(()=>{if(statusEl.textContent==="Video listo ✓")statusEl.textContent=""},2000)}}catch(err){console.error("Error al subir video de respuesta:",err);alert("No se pudo subir el video.")}
+return}});contenedor.addEventListener("submit",(e)=>{const form=e.target.closest(".form-respuesta");if(!form)return;e.preventDefault();enviarRespuesta(form)});let draggingTarjeta=null,startX=0,dragged=0;const UMBRAL=46,MAX_ARRASTRE=74;contenedor.addEventListener("pointerdown",(e)=>{if(e.pointerType==="mouse"&&e.button!==0)return;const tarjeta=e.target.closest(".comentario-tarjeta");if(!tarjeta)return;if(e.target.closest("a, button, label, input, textarea, video, .video-wrap"))return;draggingTarjeta=tarjeta;startX=e.clientX;dragged=0;tarjeta.classList.add("arrastrando");try{tarjeta.setPointerCapture(e.pointerId)}catch(err){}});contenedor.addEventListener("pointermove",(e)=>{if(!draggingTarjeta)return;const delta=e.clientX-startX;const icono=draggingTarjeta.parentElement.querySelector(".comentario-swipe-icon");if(delta<=0){dragged=0;draggingTarjeta.style.transform="translateX(0px)";if(icono)icono.style.opacity="0";return}
+dragged=Math.min(delta,MAX_ARRASTRE);draggingTarjeta.style.transform=`translateX(${dragged}px)`;if(icono)icono.style.opacity=String(Math.min(dragged/UMBRAL,1));});function finalizarArrastre(){if(!draggingTarjeta)return;const tarjeta=draggingTarjeta;tarjeta.classList.remove("arrastrando");tarjeta.style.transform="translateX(0px)";const icono=tarjeta.parentElement.querySelector(".comentario-swipe-icon");if(icono)icono.style.opacity="0";if(dragged>=UMBRAL)abrirRespuesta(tarjeta.dataset.id,tarjeta.dataset.nombre);draggingTarjeta=null;dragged=0}
+contenedor.addEventListener("pointerup",finalizarArrastre);contenedor.addEventListener("pointercancel",finalizarArrastre)}
+const INTERVALO_NOTIFICACIONES_MS=30000;const TITULO_ORIGINAL=document.title;let idsNotificacionesVistas=null;function pedirPermisoNotificaciones(){if("Notification" in window&&Notification.permission==="default"){Notification.requestPermission().catch(()=>{})}}
+function mostrarAvisoNotificacion(n){const toast=document.createElement("div");toast.className="toast-notificacion";toast.setAttribute("role","status");toast.innerHTML=`<strong>${escaparHTML(n.remitente_nombre)}</strong> respondió a tu comentario: "${escaparHTML((n.mensaje_preview || "").slice(0, 60))}"`;toast.addEventListener("click",()=>{const tab5=document.getElementById("tab5");if(tab5)tab5.checked=!0;toast.remove();marcarNotificacionLeida(n.id,n.comentario_id)});document.body.appendChild(toast);setTimeout(()=>toast.remove(),8000);if("Notification" in window&&Notification.permission==="granted"&&document.hidden){try{new Notification("Enlaces Pobrecraft",{body:`${n.remitente_nombre} respondió: ${(n.mensaje_preview || "").slice(0, 80)}`,icon:"img/icon.webp"})}catch(err){}}}
+function detectarNotificacionesNuevas(lista){const idsActuales=new Set(lista.map((n)=>n.id));if(idsNotificacionesVistas){lista.filter((n)=>!idsNotificacionesVistas.has(n.id)).forEach(mostrarAvisoNotificacion)}
+idsNotificacionesVistas=idsActuales;document.title=lista.length>0?`(${lista.length}) ${TITULO_ORIGINAL}`:TITULO_ORIGINAL}
+async function actualizarNotificaciones(){const btn=document.getElementById("btn-notificaciones");const badge=document.getElementById("badge-notificaciones");if(!btn||!badge||!db)return;const miNombre=obtenerMiNombre();if(!miNombre){btn.style.display="none";return}
+btn.style.display="flex";try{const{data,error}=await db.from("notificaciones").select("*").ilike("destinatario_nombre",miNombre).eq("leido",!1).order("created_at",{ascending:!1}).limit(30);if(error)throw error;window._notificacionesActuales=data||[];detectarNotificacionesNuevas(window._notificacionesActuales);const cantidad=window._notificacionesActuales.length;if(cantidad>0){badge.textContent=cantidad>9?"9+":String(cantidad);badge.style.display="flex"}else{badge.style.display="none"}}catch(err){console.error("Error al comprobar notificaciones:",err)}}
+function renderizarPanelNotificaciones(){const panel=document.getElementById("panel-notificaciones");if(!panel)return;const lista=window._notificacionesActuales||[];if(lista.length===0){panel.innerHTML='<p class="notificacion-vacia">No tienes notificaciones nuevas</p>';return}
+panel.innerHTML=lista.map((n)=>`
       <div class="notificacion-item" data-id="${n.id}" data-comentario-id="${n.comentario_id || ""}">
         <strong>${escaparHTML(n.remitente_nombre)}</strong> respondió a tu comentario: "${escaparHTML((n.mensaje_preview || "").slice(0, 80))}"
       </div>
-    `).join("");
-}
-
-async function marcarNotificacionLeida(id, comentarioId) {
-    if (db) {
-        try { await db.from("notificaciones").update({ leido: true }).eq("id", id); }
-        catch (err) { console.error("Error al marcar notificación como leída:", err); }
-    }
-    await actualizarNotificaciones();
-    renderizarPanelNotificaciones();
-    if (comentarioId) {
-        const tarjetaWrap = document.querySelector(`.comentario-swipe-wrap[data-id="${comentarioId}"]`);
-        if (tarjetaWrap) {
-            tarjetaWrap.scrollIntoView({ behavior: "smooth", block: "center" });
-            const tarjeta = tarjetaWrap.querySelector(".comentario-tarjeta");
-            if (tarjeta) {
-                tarjeta.style.transition = "background 0.3s";
-                tarjeta.style.background = "rgba(255,51,51,0.15)";
-                setTimeout(() => { tarjeta.style.background = ""; }, 1500);
-            }
-        }
-    }
-}
-
-// ==========================================
-// ACTUALIZACIÓN EN VIVO
-// ==========================================
-function actualizarContadoresEnTarjeta(id, likes, dislikes) {
-    const tarjeta = document.querySelector(`.comentario-tarjeta[data-id="${id}"]`);
-    if (!tarjeta) return false;
-    const contLike = tarjeta.querySelector(".btn-like .contador-voto");
-    const contDislike = tarjeta.querySelector(".btn-dislike .contador-voto");
-    if (contLike) contLike.textContent = String(likes ?? 0);
-    if (contDislike) contDislike.textContent = String(dislikes ?? 0);
-    return true;
-}
-
-function actualizarMediaDeComentario(id, gifUrl) {
-    const tarjeta = document.querySelector(`.comentario-tarjeta[data-id="${id}"]`);
-    if (!tarjeta) return;
-    const mediaActual = tarjeta.querySelector(".comentario-mensaje-gif");
-    const wrapperActual = mediaActual ? mediaActual.closest(".video-wrap") : null;
-    const esVideo = gifUrl && /\.(webm|mp4)(\?|$)/i.test(gifUrl);
-    if (!gifUrl) {
-        if (wrapperActual) wrapperActual.remove();
-        else if (mediaActual) mediaActual.remove();
-        return;
-    }
-    if (mediaActual) {
-        const tagCorrecto = (esVideo && mediaActual.tagName === "VIDEO") || (!esVideo && mediaActual.tagName === "IMG");
-        if (tagCorrecto && mediaActual.src === gifUrl) return;
-        if (wrapperActual) wrapperActual.remove();
-        else mediaActual.remove();
-    }
-    let nuevoEl;
-    if (esVideo) {
-        const wrapper = document.createElement("div");
-        wrapper.className = "video-wrap";
-        wrapper.dataset.paused = "true";
-        const video = document.createElement("video");
-        video.src = gifUrl;
-        video.className = "comentario-mensaje-gif video-reproducible";
-        video.preload = "none";
-        video.playsInline = true;
-        video.onerror = function () { this.parentElement.style.display = "none"; };
-        video.onplay   = function () { this.closest(".video-wrap").dataset.paused = "false"; };
-        video.onpause  = function () { this.closest(".video-wrap").dataset.paused = "true";  };
-        video.onended  = function () { this.closest(".video-wrap").dataset.paused = "true";  };
-        wrapper.appendChild(video);
-        nuevoEl = wrapper;
-    } else {
-        const img = document.createElement("img");
-        img.src = gifUrl;
-        img.className = "comentario-mensaje-gif";
-        img.loading = "lazy";
-        img.decoding = "async";
-        nuevoEl = img;
-    }
-    const acciones = tarjeta.querySelector(".comentario-acciones");
-    if (acciones && acciones.parentNode) acciones.parentNode.insertBefore(nuevoEl, acciones);
-    else {
-        const contenido = tarjeta.querySelector(".comentario-tarjeta-contenido");
-        if (contenido) contenido.appendChild(nuevoEl);
-    }
-}
-
-function incrementarContadorRespuestas(parentId) {
-    const btnVer = document.querySelector(`.btn-ver-respuestas[data-target="respuestas-${parentId}"]`);
-    if (!btnVer) return;
-    const span = btnVer.querySelector(".texto-ver-respuestas");
-    if (!span) return;
-    const m = span.textContent.match(/(\d+)/);
-    const n = (m ? parseInt(m[1], 10) : 0) + 1;
-    const texto = `Ver ${n} ${n === 1 ? "respuesta" : "respuestas"}`;
-    span.textContent = texto;
-    btnVer.dataset.textoVer = texto;
-}
-
-function recalcularContadorRespuestas(parentId, excluirId = null) {
-    const btnVer = document.querySelector(`.btn-ver-respuestas[data-target="respuestas-${parentId}"]`);
-    if (!btnVer) return;
-    const lista = document.getElementById(`respuestas-${parentId}`);
-    if (!lista) { btnVer.remove(); return; }
-    let restantes = 0;
-    lista.querySelectorAll(":scope > .comentario-swipe-wrap").forEach((w) => {
-        if (excluirId !== null && String(w.dataset.id) === String(excluirId)) return;
-        restantes++;
-    });
-    if (restantes === 0) { lista.remove(); btnVer.remove(); }
-    else {
-        const texto = `Ver ${restantes} ${restantes === 1 ? "respuesta" : "respuestas"}`;
-        const span = btnVer.querySelector(".texto-ver-respuestas");
-        if (span) span.textContent = texto;
-        btnVer.dataset.textoVer = texto;
-    }
-}
-
-function quitarComentarioDelDOM(id) {
-    const wrap = document.querySelector(`.comentario-swipe-wrap[data-id="${id}"]`);
-    if (!wrap) return;
-    const listaPadre = wrap.closest(".comentario-respuestas-lista");
-    const parentIdRespuesta = listaPadre && listaPadre.id && listaPadre.id.startsWith("respuestas-") ? listaPadre.id.replace("respuestas-", "") : null;
-    const btnVer = document.querySelector(`.btn-ver-respuestas[data-target="respuestas-${id}"]`);
-    if (btnVer) btnVer.remove();
-    const lista = document.getElementById(`respuestas-${id}`);
-    if (lista) lista.remove();
-    wrap.style.transition = "opacity 0.18s ease, transform 0.18s ease";
-    wrap.style.opacity = "0";
-    wrap.style.transform = "translateX(-20px)";
-    setTimeout(() => wrap.remove(), 180);
-    if (parentIdRespuesta) setTimeout(() => recalcularContadorRespuestas(parentIdRespuesta, id), 240);
-}
-
-function agregarComentarioAlDOM(nuevo) {
-    if (document.querySelector(`.comentario-tarjeta[data-id="${nuevo.id}"]`)) return;
-    if (!nuevo.parent_id) {
-        const contenedor = document.getElementById("lista-comentarios");
-        if (!contenedor) return;
-        const html = renderizarComentarioConRespuestasHTML(nuevo, [], new Map([[nuevo.id, nuevo]]));
-        const temp = document.createElement("div");
-        temp.innerHTML = html.trim();
-        const nodos = Array.from(temp.children);
-        nodos.forEach((n, i) => contenedor.insertBefore(n, contenedor.children[i] || null));
-        const wrap = contenedor.querySelector(`.comentario-swipe-wrap[data-id="${nuevo.id}"]`);
-        if (wrap) {
-            wrap.style.opacity = "0";
-            wrap.style.transform = "translateY(-10px)";
-            requestAnimationFrame(() => {
-                wrap.style.transition = "opacity 0.3s, transform 0.3s";
-                wrap.style.opacity = "1";
-                wrap.style.transform = "translateY(0)";
-            });
-        }
-    } else {
-        const parentId = nuevo.parent_id;
-        const lista = document.getElementById(`respuestas-${parentId}`);
-        if (lista) {
-            const html = renderizarTarjetaComentarioHTML(nuevo, true, null);
-            const temp = document.createElement("div");
-            temp.innerHTML = html.trim();
-            const wrap = temp.firstElementChild;
-            if (wrap) {
-                lista.appendChild(wrap);
-                if (lista.style.display === "none") incrementarContadorRespuestas(parentId);
-            }
-        } else {
-            const wrapPadre = document.querySelector(`.comentario-swipe-wrap[data-id="${parentId}"]`);
-            if (!wrapPadre) return;
-            const textoVer = "Ver 1 respuesta";
-            const temp = document.createElement("div");
-            temp.innerHTML = `
+    `).join("")}
+async function marcarNotificacionLeida(id,comentarioId){if(db){try{await db.from("notificaciones").update({leido:!0}).eq("id",id)}catch(err){console.error("Error al marcar notificación como leída:",err)}}
+await actualizarNotificaciones();renderizarPanelNotificaciones();if(comentarioId){const tarjetaWrap=document.querySelector(`.comentario-swipe-wrap[data-id="${comentarioId}"]`);if(tarjetaWrap){tarjetaWrap.scrollIntoView({behavior:"smooth",block:"center"});const tarjeta=tarjetaWrap.querySelector(".comentario-tarjeta");if(tarjeta){tarjeta.style.transition="background 0.3s";tarjeta.style.background="rgba(255,51,51,0.15)";setTimeout(()=>{tarjeta.style.background=""},1500)}}}}
+function actualizarContadoresEnTarjeta(id,likes,dislikes){const tarjeta=document.querySelector(`.comentario-tarjeta[data-id="${id}"]`);if(!tarjeta)return!1;const contLike=tarjeta.querySelector(".btn-like .contador-voto");const contDislike=tarjeta.querySelector(".btn-dislike .contador-voto");if(contLike)contLike.textContent=String(likes??0);if(contDislike)contDislike.textContent=String(dislikes??0);return!0}
+function actualizarMediaDeComentario(id,gifUrl){const tarjeta=document.querySelector(`.comentario-tarjeta[data-id="${id}"]`);if(!tarjeta)return;const mediaActual=tarjeta.querySelector(".comentario-mensaje-gif");const wrapperActual=mediaActual?mediaActual.closest(".video-wrap"):null;const esVideo=gifUrl&&/\.(webm|mp4)(\?|$)/i.test(gifUrl);if(!gifUrl){if(wrapperActual)wrapperActual.remove();else if(mediaActual)mediaActual.remove();return}
+if(mediaActual){const tagCorrecto=(esVideo&&mediaActual.tagName==="VIDEO")||(!esVideo&&mediaActual.tagName==="IMG");if(tagCorrecto&&mediaActual.src===gifUrl)return;if(wrapperActual)wrapperActual.remove();else mediaActual.remove()}
+let nuevoEl;if(esVideo){const wrapper=document.createElement("div");wrapper.className="video-wrap";wrapper.dataset.paused="true";const video=document.createElement("video");video.src=gifUrl;video.className="comentario-mensaje-gif video-reproducible";video.preload="none";video.playsInline=!0;video.onerror=function(){this.parentElement.style.display="none"};video.onplay=function(){this.closest(".video-wrap").dataset.paused="false"};video.onpause=function(){this.closest(".video-wrap").dataset.paused="true"};video.onended=function(){this.closest(".video-wrap").dataset.paused="true"};wrapper.appendChild(video);nuevoEl=wrapper}else{const img=document.createElement("img");img.src=gifUrl;img.className="comentario-mensaje-gif";img.loading="lazy";img.decoding="async";nuevoEl=img}
+const acciones=tarjeta.querySelector(".comentario-acciones");if(acciones&&acciones.parentNode)acciones.parentNode.insertBefore(nuevoEl,acciones);else{const contenido=tarjeta.querySelector(".comentario-tarjeta-contenido");if(contenido)contenido.appendChild(nuevoEl);}}
+function incrementarContadorRespuestas(parentId){const btnVer=document.querySelector(`.btn-ver-respuestas[data-target="respuestas-${parentId}"]`);if(!btnVer)return;const span=btnVer.querySelector(".texto-ver-respuestas");if(!span)return;const m=span.textContent.match(/(\d+)/);const n=(m?parseInt(m[1],10):0)+1;const texto=`Ver ${n} ${n === 1 ? "respuesta" : "respuestas"}`;span.textContent=texto;btnVer.dataset.textoVer=texto}
+function recalcularContadorRespuestas(parentId,excluirId=null){const btnVer=document.querySelector(`.btn-ver-respuestas[data-target="respuestas-${parentId}"]`);if(!btnVer)return;const lista=document.getElementById(`respuestas-${parentId}`);if(!lista){btnVer.remove();return}
+let restantes=0;lista.querySelectorAll(":scope > .comentario-swipe-wrap").forEach((w)=>{if(excluirId!==null&&String(w.dataset.id)===String(excluirId))return;restantes++});if(restantes===0){lista.remove();btnVer.remove()}else{const texto=`Ver ${restantes} ${restantes === 1 ? "respuesta" : "respuestas"}`;const span=btnVer.querySelector(".texto-ver-respuestas");if(span)span.textContent=texto;btnVer.dataset.textoVer=texto}}
+function quitarComentarioDelDOM(id){const wrap=document.querySelector(`.comentario-swipe-wrap[data-id="${id}"]`);if(!wrap)return;const listaPadre=wrap.closest(".comentario-respuestas-lista");const parentIdRespuesta=listaPadre&&listaPadre.id&&listaPadre.id.startsWith("respuestas-")?listaPadre.id.replace("respuestas-",""):null;const btnVer=document.querySelector(`.btn-ver-respuestas[data-target="respuestas-${id}"]`);if(btnVer)btnVer.remove();const lista=document.getElementById(`respuestas-${id}`);if(lista)lista.remove();wrap.style.transition="opacity 0.18s ease, transform 0.18s ease";wrap.style.opacity="0";wrap.style.transform="translateX(-20px)";setTimeout(()=>wrap.remove(),180);if(parentIdRespuesta)setTimeout(()=>recalcularContadorRespuestas(parentIdRespuesta,id),240);}
+function agregarComentarioAlDOM(nuevo){if(document.querySelector(`.comentario-tarjeta[data-id="${nuevo.id}"]`))return;if(!nuevo.parent_id){const contenedor=document.getElementById("lista-comentarios");if(!contenedor)return;const html=renderizarComentarioConRespuestasHTML(nuevo,[],new Map([[nuevo.id,nuevo]]));const temp=document.createElement("div");temp.innerHTML=html.trim();const nodos=Array.from(temp.children);nodos.forEach((n,i)=>contenedor.insertBefore(n,contenedor.children[i]||null));const wrap=contenedor.querySelector(`.comentario-swipe-wrap[data-id="${nuevo.id}"]`);if(wrap){wrap.style.opacity="0";wrap.style.transform="translateY(-10px)";requestAnimationFrame(()=>{wrap.style.transition="opacity 0.3s, transform 0.3s";wrap.style.opacity="1";wrap.style.transform="translateY(0)"})}}else{const parentId=nuevo.parent_id;const lista=document.getElementById(`respuestas-${parentId}`);if(lista){const html=renderizarTarjetaComentarioHTML(nuevo,!0,null);const temp=document.createElement("div");temp.innerHTML=html.trim();const wrap=temp.firstElementChild;if(wrap){lista.appendChild(wrap);if(lista.style.display==="none")incrementarContadorRespuestas(parentId);}}else{const wrapPadre=document.querySelector(`.comentario-swipe-wrap[data-id="${parentId}"]`);if(!wrapPadre)return;const textoVer="Ver 1 respuesta";const temp=document.createElement("div");temp.innerHTML=`
               <button type="button" class="btn-ver-respuestas" data-target="respuestas-${parentId}" data-texto-ver="${textoVer}">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                 <span class="texto-ver-respuestas">${textoVer}</span>
@@ -1422,408 +198,30 @@ function agregarComentarioAlDOM(nuevo) {
               <div class="comentario-respuestas-lista" id="respuestas-${parentId}" style="display:none;">
                 ${renderizarTarjetaComentarioHTML(nuevo, true, null)}
               </div>
-            `;
-            const nodos = Array.from(temp.children);
-            let ref = wrapPadre.nextSibling;
-            nodos.forEach((n) => {
-                wrapPadre.parentNode.insertBefore(n, ref);
-                ref = n.nextSibling;
-            });
-        }
-    }
-}
-
-let recargaEnVivoTimer = null;
-function recargarEnVivoDebounced() {
-    clearTimeout(recargaEnVivoTimer);
-    recargaEnVivoTimer = setTimeout(recargarComentariosPreservandoRespuesta, 400);
-}
-
-async function recargarComentariosPreservandoRespuesta() {
-    let idRespuestaGuardada = null, textoGuardado = "", nombreGuardado = "";
-    if (respuestaAbiertaId != null) {
-        const caja = document.getElementById(`respuesta-caja-${respuestaAbiertaId}`);
-        if (caja) {
-            const textarea = caja.querySelector(".comentario-respuesta-textarea");
-            const inputNombre = caja.querySelector(".comentario-respuesta-nombre");
-            if (textarea && textarea.value.trim() !== "") {
-                idRespuestaGuardada = respuestaAbiertaId;
-                textoGuardado = textarea.value;
-                nombreGuardado = inputNombre ? inputNombre.value : "";
-            }
-        }
-    }
-    respuestaAbiertaId = null;
-    await cargarComentarios();
-    if (idRespuestaGuardada) {
-        const tarjeta = document.querySelector(`.comentario-tarjeta[data-id="${idRespuestaGuardada}"]`);
-        const nombreAutor = tarjeta ? tarjeta.dataset.nombre : "";
-        abrirRespuesta(idRespuestaGuardada, nombreAutor);
-        const caja = document.getElementById(`respuesta-caja-${idRespuestaGuardada}`);
-        if (caja) {
-            const textarea = caja.querySelector(".comentario-respuesta-textarea");
-            const inputNombre = caja.querySelector(".comentario-respuesta-nombre");
-            if (textarea) textarea.value = textoGuardado;
-            if (inputNombre && nombreGuardado) inputNombre.value = nombreGuardado;
-            if (textarea) textarea.focus();
-        }
-    }
-}
-
-let canalComentariosEnVivo = null;
-function suscribirComentariosEnVivo() {
-    if (!db || canalComentariosEnVivo) return;
-    try {
-        canalComentariosEnVivo = db.channel("comentarios-realtime")
-            .on("postgres_changes", { event: "*", schema: "public", table: "comentarios" }, (payload) => {
-                if (Date.now() - ultimaAccionLocal < VENTANA_IGNORAR_REALTIME_MS) return;
-                try {
-                    const { eventType, new: nuevo, old: viejo } = payload;
-                    if (eventType === "UPDATE" && nuevo) {
-                        actualizarContadoresEnTarjeta(nuevo.id, nuevo.likes, nuevo.dislikes);
-                        if (nuevo.gif_url !== undefined) actualizarMediaDeComentario(nuevo.id, nuevo.gif_url);
-                    } else if (eventType === "DELETE" && viejo && viejo.id != null) {
-                        quitarComentarioDelDOM(viejo.id);
-                    } else if (eventType === "INSERT" && nuevo) {
-                        agregarComentarioAlDOM(nuevo);
-                    }
-                } catch (err) {
-                    console.error("Error aplicando cambio en vivo, recargando:", err);
-                    recargarEnVivoDebounced();
-                }
-            })
-            .subscribe((status) => console.log("Canal realtime comentarios:", status));
-    } catch (err) { console.error("No se pudo iniciar el canal realtime:", err); }
-}
-
-// Cachés globales
-let baseDatosRequisitos = null;
-let requisitosPromesa   = null;
-
-function cargarRequisitos() {
-    if (baseDatosRequisitos) return Promise.resolve(baseDatosRequisitos);
-    if (requisitosPromesa)   return requisitosPromesa;
-    requisitosPromesa = fetch("requisitos.json")
-        .then(r => r.ok ? r.json() : {})
-        .then(d => { baseDatosRequisitos = d || {}; return baseDatosRequisitos; })
-        .catch(() => { baseDatosRequisitos = {}; return baseDatosRequisitos; });
-    return requisitosPromesa;
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-    // ✅ 1) JSON de enlaces: fetch inmediato (aprovecha el <link rel="preload">)
-    fetch(URL_EXTERNA)
-        .then(r => r.ok ? r.json() : Promise.reject())
-        .then(d => { baseDatosEnlaces = d; })
-        .catch(err => console.warn("No se pudo precargar el JSON:", err));
-		
-		
-
-    // ✅ 2) Requisitos: precarga también (JSON pequeño)
-    cargarRequisitos();
-
-    // ✅ 3) Paginación: aplicar YA para ocultar tarjetas fuera de página
-    configurarSeccionConPaginacion("searchProgramas", "btnSearchProgramas", "programas-grid", "noResultsProgramas", 28, "programas");
-    configurarSeccionConPaginacion("searchJuegos",    "btnSearchJuegos",    "juegos-grid",    "noResultsJuegos",    28, "juegos");
-    configurarSeccionConPaginacion("searchWindows",   "btnSearchWindows",   "windows-grid",   "noResultsWindows",   28, "Windows");
-
-    // ... aquí el resto de tu DOMContentLoaded tal cual (inputs, form, notificaciones, etc.)
-
-
-    // El resto del DOMContentLoaded sigue igual
-    const contenedorComentarios = document.getElementById("lista-comentarios");
-    if (contenedorComentarios) configurarDelegacionComentarios(contenedorComentarios);
-
-    // ✅ Lazy load de Supabase al abrir la pestaña de comentarios
-    const tab5 = document.getElementById("tab5");
-    if (tab5) {
-        tab5.addEventListener("change", cargarSupabaseSiEsNecesario);
-        if (tab5.checked) cargarSupabaseSiEsNecesario();
-    }
-
-    // Inputs de UI (previsualizaciones, sin tocar Supabase todavía)
-    const inputAvatar = document.getElementById("input-avatar");
-    const previewAvatar = document.getElementById("avatar-preview");
-    if (inputAvatar && previewAvatar) {
-        inputAvatar.addEventListener("change", async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            if (file.size > MAX_IMAGEN_BYTES) { alert(`Máximo ${(MAX_IMAGEN_BYTES / 1024 / 1024).toFixed(1)} MB`); inputAvatar.value = ""; return; }
-            try {
-                const url = await subirAvatarAStorage(file);
-                if (!url) throw new Error("No se pudo subir el avatar");
-                avatarUrlSeleccionado = url;
-                previewAvatar.src = url;
-                guardarMiAvatar(url);
-            } catch (err) {
-                console.error("Error al procesar avatar:", err);
-                alert("No se pudo subir la foto de perfil. Inténtalo de nuevo.");
-            }
-        });
-    }
-
-    const inputImagenComentario = document.getElementById("input-imagen-comentario");
-    const previewImagenComentario = document.getElementById("preview-imagen-comentario");
-    const previewImagenComentarioWrap = document.getElementById("preview-imagen-comentario-wrap");
-    const btnQuitarImagenComentario = document.getElementById("btn-quitar-imagen-comentario");
-    if (inputImagenComentario) {
-        inputImagenComentario.addEventListener("change", async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            if (file.size > MAX_IMAGEN_BYTES) { alert(`Máximo ${(MAX_IMAGEN_BYTES / 1024 / 1024).toFixed(1)} MB`); inputImagenComentario.value = ""; return; }
-            const statusEl = document.getElementById("comment-status");
-            try {
-                const url = await subirConProgreso(file, statusEl, subirImagenComentarioAStorage, "Subiendo imagen");
-                if (!url) throw new Error("No se pudo subir la imagen");
-                imagenComentarioUrlSeleccionado = url;
-                if (previewImagenComentario) previewImagenComentario.src = url;
-                if (previewImagenComentarioWrap) previewImagenComentarioWrap.classList.add("activa");
-                statusEl.textContent = "Imagen lista ✓";
-                statusEl.style.color = "#0f9d58";
-                setTimeout(() => { if (statusEl.textContent === "Imagen lista ✓") statusEl.textContent = ""; }, 2000);
-            } catch (err) {
-                console.error("Error al procesar imagen:", err);
-                alert("No se pudo subir la imagen. Inténtalo de nuevo.");
-            }
-        });
-    }
-    if (btnQuitarImagenComentario) {
-        btnQuitarImagenComentario.addEventListener("click", () => {
-            imagenComentarioUrlSeleccionado = null;
-            if (inputImagenComentario) inputImagenComentario.value = "";
-            if (previewImagenComentarioWrap) previewImagenComentarioWrap.classList.remove("activa");
-        });
-    }
-
-    const emailInput = document.getElementById("comment-email");
-    const emailGuardadoInicial = obtenerMiEmail();
-    if (emailInput && emailGuardadoInicial) emailInput.value = emailGuardadoInicial;
-    if (emailInput) emailInput.addEventListener("blur", () => guardarMiEmail(emailInput.value.trim()));
-
-    const inputGif = document.getElementById("input-gif");
-    const previewGifWrap = document.getElementById("preview-gif-wrap");
-    const btnQuitarGif = document.getElementById("btn-quitar-gif");
-
-    if (btnQuitarGif) {
-        btnQuitarGif.addEventListener("click", () => {
-            gifUrlSeleccionado = null;
-            if (inputGif) inputGif.value = "";
-            if (previewGifWrap) previewGifWrap.classList.remove("activa");
-            const pGif = document.getElementById("preview-gif");
-            const pVid = document.getElementById("preview-gif-video");
-            if (pGif) pGif.src = "";
-            if (pVid) { pVid.pause(); pVid.src = ""; }
-        });
-    }
-
-    function actualizarPreviewGif(url, esVideo) {
-        const pGif = document.getElementById("preview-gif");
-        const pVid = document.getElementById("preview-gif-video");
-        const pWrap = document.getElementById("preview-gif-wrap");
-        if (esVideo && pVid) {
-            pVid.src = url;
-            pVid.style.display = "block";
-            if (pGif) { pGif.src = ""; pGif.style.display = "none"; }
-        } else if (pGif) {
-            pGif.src = url;
-            pGif.style.display = "block";
-            if (pVid) { pVid.src = ""; pVid.style.display = "none"; }
-        }
-        if (pWrap) pWrap.classList.add("activa");
-    }
-
-    if (inputGif) {
-        inputGif.addEventListener("change", async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const tiposOk = ["image/gif", "video/webm", "video/mp4"];
-            if (!tiposOk.includes(file.type)) { alert("Solo se permiten archivos GIF, WebM o MP4."); inputGif.value = ""; return; }
-            if (file.size > MAX_GIF_BYTES) { alert(`Máximo ${(MAX_GIF_BYTES / 1024 / 1024).toFixed(1)} MB`); inputGif.value = ""; return; }
-            const statusEl = document.getElementById("comment-status");
-            if (!statusEl) return;
-            try {
-                const url = await subirConProgreso(file, statusEl, subirGifAStorage, "Subiendo GIF");
-                if (!url) throw new Error("No se pudo subir");
-                gifUrlSeleccionado = url;
-                actualizarPreviewGif(url, file.type.startsWith("video/"));
-                if (file.type === "image/gif") {
-                    statusEl.textContent = "Subido. Convirtiendo a WebM en el servidor...";
-                    statusEl.style.color = "#0f9d58";
-                    setTimeout(() => { if (statusEl.textContent.startsWith("Subido")) statusEl.textContent = ""; }, 6000);
-                } else {
-                    setTimeout(() => { statusEl.textContent = ""; }, 1500);
-                }
-            } catch (err) {
-                console.error("Error al subir GIF:", err);
-                alert("No se pudo subir el archivo.");
-                inputGif.value = "";
-            }
-        });
-    }
-
-    const inputVideo = document.getElementById("input-video");
-    if (inputVideo) {
-        inputVideo.addEventListener("change", async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const tiposOk = ["video/mp4", "video/webm"];
-            if (!tiposOk.includes(file.type)) { alert("Solo se permiten videos MP4 o WebM."); inputVideo.value = ""; return; }
-            if (file.size > MAX_VIDEO_BYTES) { alert(`Máximo ${(MAX_VIDEO_BYTES / 1024 / 1024).toFixed(0)} MB`); inputVideo.value = ""; return; }
-            const statusEl = document.getElementById("comment-status");
-            if (!statusEl) return;
-            try {
-                const url = await subirConProgreso(file, statusEl, subirGifAStorage, "Subiendo video");
-                if (!url) throw new Error("No se pudo subir el video");
-                gifUrlSeleccionado = url;
-                actualizarPreviewGif(url, true);
-                if (inputGif) inputGif.value = "";
-                statusEl.textContent = "Video listo ✓";
-                statusEl.style.color = "#0f9d58";
-                setTimeout(() => { if (statusEl.textContent === "Video listo ✓") statusEl.textContent = ""; }, 2000);
-            } catch (err) {
-                console.error("Error al subir video:", err);
-                alert("No se pudo subir el video.");
-                inputVideo.value = "";
-            }
-        });
-    }
-
-    const nameInput = document.getElementById("comment-name");
-    const nombreGuardadoInicial = obtenerMiNombre();
-    if (nameInput && nombreGuardadoInicial) {
-        nameInput.value = nombreGuardadoInicial;
-        nameInput.readOnly = true;
-        nameInput.title = "Tu nombre ya está registrado. Pulsa el lápiz para cambiarlo.";
-        nameInput.style.opacity = "0.85";
-        nameInput.style.cursor = "not-allowed";
-        const wrapper = document.createElement("div");
-        wrapper.className = "input-nombre-wrapper";
-        nameInput.parentNode.insertBefore(wrapper, nameInput);
-        wrapper.appendChild(nameInput);
-        const btnEditarNombre = document.createElement("button");
-        btnEditarNombre.type = "button";
-        btnEditarNombre.className = "btn-editar-nombre";
-        btnEditarNombre.title = "Cambiar nombre";
-        btnEditarNombre.setAttribute("aria-label", "Cambiar nombre");
-        btnEditarNombre.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>`;
-        wrapper.appendChild(btnEditarNombre);
-        btnEditarNombre.addEventListener("click", () => {
-            nameInput.readOnly = false;
-            nameInput.style.opacity = "1";
-            nameInput.style.cursor = "text";
-            nameInput.focus();
-        });
-        nameInput.addEventListener("blur", () => {
-            if (nameInput.value.trim() !== "") {
-                nameInput.readOnly = true;
-                nameInput.style.opacity = "0.85";
-                nameInput.style.cursor = "not-allowed";
-            }
-        });
-    }
-
-    const avatarGuardado = obtenerMiAvatar();
-    if (avatarGuardado) {
-        avatarUrlSeleccionado = avatarGuardado;
-        if (previewAvatar) previewAvatar.src = avatarGuardado;
-    }
-
-    const btnNotificaciones = document.getElementById("btn-notificaciones");
-    const panelNotificaciones = document.getElementById("panel-notificaciones");
-    if (btnNotificaciones && panelNotificaciones) {
-        btnNotificaciones.addEventListener("click", (e) => {
-            e.stopPropagation();
-            const abierto = panelNotificaciones.classList.toggle("activo");
-            if (abierto) renderizarPanelNotificaciones();
-        });
-        panelNotificaciones.addEventListener("click", (e) => {
-            const item = e.target.closest(".notificacion-item");
-            if (!item) return;
-            marcarNotificacionLeida(item.dataset.id, item.dataset.comentarioId);
-        });
-        document.addEventListener("click", (e) => {
-            if (!panelNotificaciones.contains(e.target) && !btnNotificaciones.contains(e.target)) {
-                panelNotificaciones.classList.remove("activo");
-            }
-        });
-    }
-
-    setInterval(() => {
-        if (!document.hidden || ("Notification" in window && Notification.permission === "granted")) {
-            actualizarNotificaciones();
-        }
-    }, INTERVALO_NOTIFICACIONES_MS);
-    document.addEventListener("visibilitychange", () => {
-        if (!document.hidden) actualizarNotificaciones();
-    });
-
-    const form = document.getElementById("comment-form");
-    if (form) {
-        form.addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const status = document.getElementById("comment-status");
-            const btnSubmit = document.getElementById("btn-enviar-comentario");
-            const textInput = document.getElementById("comment-text");
-            if (!db) { status.textContent = "Espera un momento, cargando la base de datos..."; status.style.color = "var(--text-muted)"; return; }
-            const nombre = nameInput.value.trim();
-            const mensaje = textInput.value.trim();
-            const avatar = avatarUrlSeleccionado || AVATAR_DEFAULT;
-            if (!nombre || !mensaje) return;
-            status.textContent = "Publicando comentario...";
-            status.style.color = "var(--text-muted)";
-            btnSubmit.disabled = true;
-            btnSubmit.style.opacity = "0.7";
-            try {
-                if (!(await nombreDisponible(nombre))) {
-                    status.textContent = "Ese nombre ya está en uso. Elige otro.";
-                    status.style.color = "var(--red-main)";
-                    btnSubmit.disabled = false;
-                    btnSubmit.style.opacity = "1";
-                    return;
-                }
-                const emailActual = (document.getElementById("comment-email")?.value || "").trim();
-                guardarMiEmail(emailActual);
-                const { error } = await db.from("comentarios").insert([{
-                    nombre, mensaje, avatar_url: avatar, parent_id: null,
-                    imagen_url: imagenComentarioUrlSeleccionado || null,
-                    gif_url: gifUrlSeleccionado || null,
-                    email: emailActual || null, user_id: MI_USER_ID
-                }]);
-                if (error) throw error;
-                gifUrlSeleccionado = null;
-                const previewGifWrap2 = document.getElementById("preview-gif-wrap");
-                if (previewGifWrap2) previewGifWrap2.classList.remove("activa");
-                if (inputGif) inputGif.value = "";
-                guardarMiNombre(nombre);
-                pedirPermisoNotificaciones();
-                actualizarNotificaciones();
-                status.textContent = "¡Comentario publicado!";
-                status.style.color = "#0f9d58";
-                textInput.value = "";
-                imagenComentarioUrlSeleccionado = null;
-                if (previewImagenComentarioWrap) previewImagenComentarioWrap.classList.remove("activa");
-                if (inputImagenComentario) inputImagenComentario.value = "";
-                await cargarComentarios();
-                setTimeout(() => { status.textContent = ""; }, 3500);
-            } catch (err) {
-                console.error("Error al publicar comentario:", err);
-                status.textContent = "Error al publicar. Inténtalo de nuevo.";
-                status.style.color = "var(--red-main)";
-            } finally {
-                btnSubmit.disabled = false;
-                btnSubmit.style.opacity = "1";
-            }
-        });
-    }
-});
-
-// ==========================================
-// MOSTRAR EL ANUNCIO CUANDO LA PÁGINA CARGUE COMPLETAMENTE
-// ==========================================
-window.addEventListener("load", () => {
-    const contenedorPubli = document.getElementById("modal-publicidad");
-    if (contenedorPubli) {
-        contenedorPubli.style.display = "flex";
-    }
-    cargarAnuncioFijo();
-});
+            `;const nodos=Array.from(temp.children);let ref=wrapPadre.nextSibling;nodos.forEach((n)=>{wrapPadre.parentNode.insertBefore(n,ref);ref=n.nextSibling})}}}
+let recargaEnVivoTimer=null;function recargarEnVivoDebounced(){clearTimeout(recargaEnVivoTimer);recargaEnVivoTimer=setTimeout(recargarComentariosPreservandoRespuesta,400)}
+async function recargarComentariosPreservandoRespuesta(){let idRespuestaGuardada=null,textoGuardado="",nombreGuardado="";if(respuestaAbiertaId!=null){const caja=document.getElementById(`respuesta-caja-${respuestaAbiertaId}`);if(caja){const textarea=caja.querySelector(".comentario-respuesta-textarea");const inputNombre=caja.querySelector(".comentario-respuesta-nombre");if(textarea&&textarea.value.trim()!==""){idRespuestaGuardada=respuestaAbiertaId;textoGuardado=textarea.value;nombreGuardado=inputNombre?inputNombre.value:""}}}
+respuestaAbiertaId=null;await cargarComentarios();if(idRespuestaGuardada){const tarjeta=document.querySelector(`.comentario-tarjeta[data-id="${idRespuestaGuardada}"]`);const nombreAutor=tarjeta?tarjeta.dataset.nombre:"";abrirRespuesta(idRespuestaGuardada,nombreAutor);const caja=document.getElementById(`respuesta-caja-${idRespuestaGuardada}`);if(caja){const textarea=caja.querySelector(".comentario-respuesta-textarea");const inputNombre=caja.querySelector(".comentario-respuesta-nombre");if(textarea)textarea.value=textoGuardado;if(inputNombre&&nombreGuardado)inputNombre.value=nombreGuardado;if(textarea)textarea.focus();}}}
+let canalComentariosEnVivo=null;function suscribirComentariosEnVivo(){if(!db||canalComentariosEnVivo)return;try{canalComentariosEnVivo=db.channel("comentarios-realtime").on("postgres_changes",{event:"*",schema:"public",table:"comentarios"},(payload)=>{if(Date.now()-ultimaAccionLocal<VENTANA_IGNORAR_REALTIME_MS)return;try{const{eventType,new:nuevo,old:viejo}=payload;if(eventType==="UPDATE"&&nuevo){actualizarContadoresEnTarjeta(nuevo.id,nuevo.likes,nuevo.dislikes);if(nuevo.gif_url!==undefined)actualizarMediaDeComentario(nuevo.id,nuevo.gif_url);}else if(eventType==="DELETE"&&viejo&&viejo.id!=null){quitarComentarioDelDOM(viejo.id)}else if(eventType==="INSERT"&&nuevo){agregarComentarioAlDOM(nuevo)}}catch(err){console.error("Error aplicando cambio en vivo, recargando:",err);recargarEnVivoDebounced()}}).subscribe((status)=>console.log("Canal realtime comentarios:",status))}catch(err){console.error("No se pudo iniciar el canal realtime:",err)}}
+let baseDatosRequisitos=null;let requisitosPromesa=null;function cargarRequisitos(){if(baseDatosRequisitos)return Promise.resolve(baseDatosRequisitos);if(requisitosPromesa)return requisitosPromesa;requisitosPromesa=fetch("requisitos.json").then(r=>r.ok?r.json():{}).then(d=>{baseDatosRequisitos=d||{};return baseDatosRequisitos}).catch(()=>{baseDatosRequisitos={};return baseDatosRequisitos});return requisitosPromesa}
+document.addEventListener("DOMContentLoaded",()=>{fetch(URL_EXTERNA).then(r=>r.ok?r.json():Promise.reject()).then(d=>{baseDatosEnlaces=d}).catch(err=>console.warn("No se pudo precargar el JSON:",err));cargarRequisitos();configurarSeccionConPaginacion("searchProgramas","btnSearchProgramas","programas-grid","noResultsProgramas",28,"programas");configurarSeccionConPaginacion("searchJuegos","btnSearchJuegos","juegos-grid","noResultsJuegos",28,"juegos");configurarSeccionConPaginacion("searchWindows","btnSearchWindows","windows-grid","noResultsWindows",28,"Windows");const contenedorComentarios=document.getElementById("lista-comentarios");if(contenedorComentarios)configurarDelegacionComentarios(contenedorComentarios);const tab5=document.getElementById("tab5");if(tab5){tab5.addEventListener("change",cargarSupabaseSiEsNecesario);if(tab5.checked)cargarSupabaseSiEsNecesario();}
+const inputAvatar=document.getElementById("input-avatar");const previewAvatar=document.getElementById("avatar-preview");if(inputAvatar&&previewAvatar){inputAvatar.addEventListener("change",async(e)=>{const file=e.target.files[0];if(!file)return;if(file.size>MAX_IMAGEN_BYTES){alert(`Máximo ${(MAX_IMAGEN_BYTES / 1024 / 1024).toFixed(1)} MB`);inputAvatar.value="";return}
+try{const url=await subirAvatarAStorage(file);if(!url)throw new Error("No se pudo subir el avatar");avatarUrlSeleccionado=url;previewAvatar.src=url;guardarMiAvatar(url)}catch(err){console.error("Error al procesar avatar:",err);alert("No se pudo subir la foto de perfil. Inténtalo de nuevo.")}})}
+const inputImagenComentario=document.getElementById("input-imagen-comentario");const previewImagenComentario=document.getElementById("preview-imagen-comentario");const previewImagenComentarioWrap=document.getElementById("preview-imagen-comentario-wrap");const btnQuitarImagenComentario=document.getElementById("btn-quitar-imagen-comentario");if(inputImagenComentario){inputImagenComentario.addEventListener("change",async(e)=>{const file=e.target.files[0];if(!file)return;if(file.size>MAX_IMAGEN_BYTES){alert(`Máximo ${(MAX_IMAGEN_BYTES / 1024 / 1024).toFixed(1)} MB`);inputImagenComentario.value="";return}
+const statusEl=document.getElementById("comment-status");try{const url=await subirConProgreso(file,statusEl,subirImagenComentarioAStorage,"Subiendo imagen");if(!url)throw new Error("No se pudo subir la imagen");imagenComentarioUrlSeleccionado=url;if(previewImagenComentario)previewImagenComentario.src=url;if(previewImagenComentarioWrap)previewImagenComentarioWrap.classList.add("activa");statusEl.textContent="Imagen lista ✓";statusEl.style.color="#0f9d58";setTimeout(()=>{if(statusEl.textContent==="Imagen lista ✓")statusEl.textContent=""},2000)}catch(err){console.error("Error al procesar imagen:",err);alert("No se pudo subir la imagen. Inténtalo de nuevo.")}})}
+if(btnQuitarImagenComentario){btnQuitarImagenComentario.addEventListener("click",()=>{imagenComentarioUrlSeleccionado=null;if(inputImagenComentario)inputImagenComentario.value="";if(previewImagenComentarioWrap)previewImagenComentarioWrap.classList.remove("activa");})}
+const emailInput=document.getElementById("comment-email");const emailGuardadoInicial=obtenerMiEmail();if(emailInput&&emailGuardadoInicial)emailInput.value=emailGuardadoInicial;if(emailInput)emailInput.addEventListener("blur",()=>guardarMiEmail(emailInput.value.trim()));const inputGif=document.getElementById("input-gif");const previewGifWrap=document.getElementById("preview-gif-wrap");const btnQuitarGif=document.getElementById("btn-quitar-gif");if(btnQuitarGif){btnQuitarGif.addEventListener("click",()=>{gifUrlSeleccionado=null;if(inputGif)inputGif.value="";if(previewGifWrap)previewGifWrap.classList.remove("activa");const pGif=document.getElementById("preview-gif");const pVid=document.getElementById("preview-gif-video");if(pGif)pGif.src="";if(pVid){pVid.pause();pVid.src=""}})}
+function actualizarPreviewGif(url,esVideo){const pGif=document.getElementById("preview-gif");const pVid=document.getElementById("preview-gif-video");const pWrap=document.getElementById("preview-gif-wrap");if(esVideo&&pVid){pVid.src=url;pVid.style.display="block";if(pGif){pGif.src="";pGif.style.display="none"}}else if(pGif){pGif.src=url;pGif.style.display="block";if(pVid){pVid.src="";pVid.style.display="none"}}
+if(pWrap)pWrap.classList.add("activa");}
+if(inputGif){inputGif.addEventListener("change",async(e)=>{const file=e.target.files[0];if(!file)return;const tiposOk=["image/gif","video/webm","video/mp4"];if(!tiposOk.includes(file.type)){alert("Solo se permiten archivos GIF, WebM o MP4.");inputGif.value="";return}
+if(file.size>MAX_GIF_BYTES){alert(`Máximo ${(MAX_GIF_BYTES / 1024 / 1024).toFixed(1)} MB`);inputGif.value="";return}
+const statusEl=document.getElementById("comment-status");if(!statusEl)return;try{const url=await subirConProgreso(file,statusEl,subirGifAStorage,"Subiendo GIF");if(!url)throw new Error("No se pudo subir");gifUrlSeleccionado=url;actualizarPreviewGif(url,file.type.startsWith("video/"));if(file.type==="image/gif"){statusEl.textContent="Subido. Convirtiendo a WebM en el servidor...";statusEl.style.color="#0f9d58";setTimeout(()=>{if(statusEl.textContent.startsWith("Subido"))statusEl.textContent=""},6000)}else{setTimeout(()=>{statusEl.textContent=""},1500)}}catch(err){console.error("Error al subir GIF:",err);alert("No se pudo subir el archivo.");inputGif.value=""}})}
+const inputVideo=document.getElementById("input-video");if(inputVideo){inputVideo.addEventListener("change",async(e)=>{const file=e.target.files[0];if(!file)return;const tiposOk=["video/mp4","video/webm"];if(!tiposOk.includes(file.type)){alert("Solo se permiten videos MP4 o WebM.");inputVideo.value="";return}
+if(file.size>MAX_VIDEO_BYTES){alert(`Máximo ${(MAX_VIDEO_BYTES / 1024 / 1024).toFixed(0)} MB`);inputVideo.value="";return}
+const statusEl=document.getElementById("comment-status");if(!statusEl)return;try{const url=await subirConProgreso(file,statusEl,subirGifAStorage,"Subiendo video");if(!url)throw new Error("No se pudo subir el video");gifUrlSeleccionado=url;actualizarPreviewGif(url,!0);if(inputGif)inputGif.value="";statusEl.textContent="Video listo ✓";statusEl.style.color="#0f9d58";setTimeout(()=>{if(statusEl.textContent==="Video listo ✓")statusEl.textContent=""},2000)}catch(err){console.error("Error al subir video:",err);alert("No se pudo subir el video.");inputVideo.value=""}})}
+const nameInput=document.getElementById("comment-name");const nombreGuardadoInicial=obtenerMiNombre();if(nameInput&&nombreGuardadoInicial){nameInput.value=nombreGuardadoInicial;nameInput.readOnly=!0;nameInput.title="Tu nombre ya está registrado. Pulsa el lápiz para cambiarlo.";nameInput.style.opacity="0.85";nameInput.style.cursor="not-allowed";const wrapper=document.createElement("div");wrapper.className="input-nombre-wrapper";nameInput.parentNode.insertBefore(wrapper,nameInput);wrapper.appendChild(nameInput);const btnEditarNombre=document.createElement("button");btnEditarNombre.type="button";btnEditarNombre.className="btn-editar-nombre";btnEditarNombre.title="Cambiar nombre";btnEditarNombre.setAttribute("aria-label","Cambiar nombre");btnEditarNombre.innerHTML=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>`;wrapper.appendChild(btnEditarNombre);btnEditarNombre.addEventListener("click",()=>{nameInput.readOnly=!1;nameInput.style.opacity="1";nameInput.style.cursor="text";nameInput.focus()});nameInput.addEventListener("blur",()=>{if(nameInput.value.trim()!==""){nameInput.readOnly=!0;nameInput.style.opacity="0.85";nameInput.style.cursor="not-allowed"}})}
+const avatarGuardado=obtenerMiAvatar();if(avatarGuardado){avatarUrlSeleccionado=avatarGuardado;if(previewAvatar)previewAvatar.src=avatarGuardado}
+const btnNotificaciones=document.getElementById("btn-notificaciones");const panelNotificaciones=document.getElementById("panel-notificaciones");if(btnNotificaciones&&panelNotificaciones){btnNotificaciones.addEventListener("click",(e)=>{e.stopPropagation();const abierto=panelNotificaciones.classList.toggle("activo");if(abierto)renderizarPanelNotificaciones();});panelNotificaciones.addEventListener("click",(e)=>{const item=e.target.closest(".notificacion-item");if(!item)return;marcarNotificacionLeida(item.dataset.id,item.dataset.comentarioId)});document.addEventListener("click",(e)=>{if(!panelNotificaciones.contains(e.target)&&!btnNotificaciones.contains(e.target)){panelNotificaciones.classList.remove("activo")}})}
+setInterval(()=>{if(!document.hidden||("Notification" in window&&Notification.permission==="granted")){actualizarNotificaciones()}},INTERVALO_NOTIFICACIONES_MS);document.addEventListener("visibilitychange",()=>{if(!document.hidden)actualizarNotificaciones();});const form=document.getElementById("comment-form");if(form){form.addEventListener("submit",async(e)=>{e.preventDefault();const status=document.getElementById("comment-status");const btnSubmit=document.getElementById("btn-enviar-comentario");const textInput=document.getElementById("comment-text");if(!db){status.textContent="Espera un momento, cargando la base de datos...";status.style.color="var(--text-muted)";return}
+const nombre=nameInput.value.trim();const mensaje=textInput.value.trim();const avatar=avatarUrlSeleccionado||AVATAR_DEFAULT;if(!nombre||!mensaje)return;status.textContent="Publicando comentario...";status.style.color="var(--text-muted)";btnSubmit.disabled=!0;btnSubmit.style.opacity="0.7";try{if(!(await nombreDisponible(nombre))){status.textContent="Ese nombre ya está en uso. Elige otro.";status.style.color="var(--red-main)";btnSubmit.disabled=!1;btnSubmit.style.opacity="1";return}
+const emailActual=(document.getElementById("comment-email")?.value||"").trim();guardarMiEmail(emailActual);const{error}=await db.from("comentarios").insert([{nombre,mensaje,avatar_url:avatar,parent_id:null,imagen_url:imagenComentarioUrlSeleccionado||null,gif_url:gifUrlSeleccionado||null,email:emailActual||null,user_id:MI_USER_ID}]);if(error)throw error;gifUrlSeleccionado=null;const previewGifWrap2=document.getElementById("preview-gif-wrap");if(previewGifWrap2)previewGifWrap2.classList.remove("activa");if(inputGif)inputGif.value="";guardarMiNombre(nombre);pedirPermisoNotificaciones();actualizarNotificaciones();status.textContent="¡Comentario publicado!";status.style.color="#0f9d58";textInput.value="";imagenComentarioUrlSeleccionado=null;if(previewImagenComentarioWrap)previewImagenComentarioWrap.classList.remove("activa");if(inputImagenComentario)inputImagenComentario.value="";await cargarComentarios();setTimeout(()=>{status.textContent=""},3500)}catch(err){console.error("Error al publicar comentario:",err);status.textContent="Error al publicar. Inténtalo de nuevo.";status.style.color="var(--red-main)"}finally{btnSubmit.disabled=!1;btnSubmit.style.opacity="1"}})}});window.addEventListener("load",()=>{cargarAnuncioFijo()})
